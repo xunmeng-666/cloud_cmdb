@@ -1,0 +1,240 @@
+from django.db import models
+
+# Create your models here.
+
+device_status = (
+    (0,'未启用'),
+    (1,'已启用'),
+    (2,'故障'),
+    (3,'下线'),
+)
+
+approver_status = (
+    (0,'待审批'),
+    (1,'已审批'),
+    (2,'待协商'),
+)
+
+class IDC(models.Model):
+    name = models.CharField(verbose_name='机房名称',max_length=200,unique=True)
+    address = models.CharField(verbose_name='机房地址',max_length=200)
+    contacts = models.CharField(verbose_name='机房联系人',max_length=32,blank=True,null=True)
+    phone = models.CharField(verbose_name='联系电话',max_length=12,blank=True,null=True)
+    remarks = models.CharField(verbose_name='备注',max_length=200,blank=True,null=True)
+
+    class Meta:
+        verbose_name = '机房信息'
+        verbose_name_plural = '机房信息'
+
+    def __str__(self):
+        return self.name
+
+class Cabint(models.Model):
+    number = models.IntegerField(verbose_name='编号',unique=True)
+    size = models.CharField(verbose_name='容量',max_length=128,blank=True,null=True)
+    room_muber = models.IntegerField(verbose_name='机房编号')
+    idc = models.ForeignKey(IDC,on_delete=models.CASCADE,related_name='cabintd')
+    start_date = models.DateTimeField(auto_now_add=True)
+    end_date = models.DateTimeField(blank=True,null=True)
+
+    class Meta:
+        verbose_name = '机柜'
+        verbose_name_plural = '机柜'
+
+    def __str__(self):
+        return self.number
+
+# class Model(models.Model):
+#     name = models.CharField(verbose_name='型号',max_length=64,blank=True,null=True,unique=True)
+#
+#     class Meta:
+#         verbose_name = '型号'
+#         verbose_name_plural = '型号'
+#
+#     def __str__(self):
+#         return self.name
+
+class Protocol(models.Model):
+    name = models.CharField(verbose_name='协议',max_length=128,unique=True)
+
+    class Meta:
+        verbose_name = '协议'
+        verbose_name_plural = '协议'
+
+    def __str__(self):
+        return self.name
+
+class Application(models.Model):
+    name = models.CharField(verbose_name='应用',max_length=64)
+    version = models.CharField(verbose_name='版本号',max_length=32)
+
+    class Meta:
+        verbose_name = "应用"
+        verbose_name_plural = '应用'
+
+    def __str__(self):
+        return self.name
+
+class Nic(models.Model):
+    sn = models.CharField(max_length=32, blank=True, null=True, unique=True)
+    # company = models.ForeignKey(Company)
+
+    class Meta:
+        verbose_name = '网卡'
+        verbose_name_plural = '网卡'
+
+    def __str__(self):
+        return "%s" %(self.company)
+
+class Ram(models.Model):
+    sn = models.CharField(max_length=32, blank=True, null=True, unique=True)
+    # company = models.ForeignKey(Company,)
+    size = models.CharField(verbose_name='大小',max_length=32)
+
+    class Meta:
+        verbose_name = '内存'
+        verbose_name_plural = '内存'
+
+    def __str__(self):
+        return self.size
+
+class Disk(models.Model):
+    sn = models.CharField(max_length=32, blank=True, null=True, unique=True)
+    # company = models.ForeignKey(Company)
+    size = models.CharField(verbose_name='磁盘容量',max_length=32)
+
+    class Meta:
+        verbose_name = '磁盘'
+        verbose_name_plural = '磁盘'
+
+class Switch(models.Model):
+    sn = models.CharField(max_length=32, blank=True, null=True, unique=True)
+    name = models.CharField(max_length=32, unique=True)
+    # company = models.ForeignKey(Company,)
+    nic = models.ForeignKey(Nic)
+    ram = models.ForeignKey(Ram)
+    ipaddress = models.GenericIPAddressField(unique=True)
+    protocol = models.ForeignKey(Protocol)
+    cabint = models.ForeignKey(Cabint,related_name='switchd',on_delete=models.CASCADE)
+    device_statuses = models.SmallIntegerField(choices=device_status,default=0)
+    start_date = models.DateTimeField(auto_now_add=True)
+    end_date = models.DateTimeField(blank=True,null=True)
+
+    class Meta:
+        verbose_name = '交换机'
+        verbose_name_plural = '交换机'
+
+
+
+class Router(models.Model):
+    sn = models.CharField(max_length=32, blank=True, null=True, unique=True)
+    name = models.CharField(max_length=32, unique=True)
+    # company = models.ForeignKey(Company)
+    nic = models.ForeignKey(Nic)
+    ram = models.ForeignKey(Ram)
+    ipaddress = models.GenericIPAddressField(unique=True)
+    protocol = models.ForeignKey(Protocol, )
+    cabint = models.ForeignKey(Cabint,related_name='routerd',on_delete=models.CASCADE )
+    device_statuses = models.SmallIntegerField(choices=device_status,default=0)
+    start_date = models.DateTimeField(auto_now_add=True)
+    end_date = models.DateTimeField(blank=True,null=True)
+
+    class Meta:
+        verbose_name = '路由器'
+        verbose_name_plural = '路由器'
+
+    def __str__(self):
+        return "%s,%s" %(self.ipaddress,self.device_statuses)
+
+class GFW(models.Model):
+    sn = models.CharField(max_length=32, blank=True, null=True, unique=True)
+    name = models.CharField(max_length=32,unique=True)
+    # company = models.ForeignKey(Company, )
+    nic = models.ForeignKey(Nic, )
+    ram = models.ForeignKey(Ram, )
+    ipaddress = models.GenericIPAddressField(unique=True)
+    protocol = models.ForeignKey(Protocol, )
+    cabint = models.ForeignKey(Cabint, related_name='gfwd',on_delete=models.CASCADE)
+    device_statuses = models.SmallIntegerField(choices=device_status,default=0)
+    start_date = models.DateTimeField(auto_now_add=True)
+    end_date = models.DateTimeField(blank=True,null=True)
+
+    class Meta:
+        verbose_name = '防火墙'
+        verbose_name_plural = '防火墙'
+
+    def __str__(self):
+        return self.name
+
+class Servers(models.Model):
+    device_status = (
+        (0, '未启用'),
+        (1, '已启用'),
+        (2, '故障'),
+        (3, '下线'),
+    )
+
+    sn = models.CharField(max_length=32, blank=True, null=True, unique=True)
+    hostname = models.CharField(verbose_name='主机名', max_length=64, unique=True)
+    ipaddress = models.GenericIPAddressField(unique=True)
+    # nic = models.ForeignKey(Nic, )
+    # ram = models.ForeignKey(Ram, )
+    # disk = models.ForeignKey(Disk, )
+    apps = models.ForeignKey(Application, )
+    cabint = models.ForeignKey(Cabint, related_name='serverd', on_delete=models.CASCADE)
+    start_date = models.DateTimeField(auto_now_add=True)
+    end_date = models.DateTimeField(blank=True, null=True)
+    device_statuses = models.SmallIntegerField(choices=device_status, default=0)
+
+    class Meta:
+        verbose_name = '服务器'
+        verbose_name_plural = '服务器'
+
+    def __str__(self):
+        return "%s" % self.hostname
+
+
+class Company(models.Model):
+    device_type = (
+        (0,Servers._meta.verbose_name),
+        (1,GFW._meta.verbose_name),
+        (2,Router._meta.verbose_name),
+        (3,Ram._meta.verbose_name),
+        (4,Nic._meta.verbose_name),
+        (5,Disk._meta.verbose_name),
+    )
+    name = models.CharField(verbose_name='厂商', max_length=64, blank=True, null=True, unique=True)
+    model = models.CharField(verbose_name='型号', max_length=64, blank=True, null=True, unique=True)
+    types = models.SmallIntegerField(choices=device_type,default=0)
+
+    class Meta:
+        verbose_name = '厂商'
+        verbose_name_plural = '厂商'
+
+    def __str__(self):
+        return self.name
+
+class Taskflow(models.Model):
+    titel = models.CharField(verbose_name='标题',max_length=128)
+    device = models.CharField(verbose_name='设备名称',max_length=64)
+    ipaddress = models.GenericIPAddressField()
+    content = models.CharField(verbose_name='内容',max_length=200,)
+    proposer = models.CharField(verbose_name='申请人',max_length=64)
+    approver = models.CharField(verbose_name='审批者',max_length=64)
+    approver_statuses = models.SmallIntegerField(choices=approver_status,default=0)
+    start_date = models.DateTimeField(auto_now_add=True)
+    end_date = models.DateTimeField(blank=True,null=True)
+
+    class Meta:
+        verbose_name = '任务'
+        verbose_name_plural = '任务'
+
+class Logs(models.Model):
+    types = models.CharField(verbose_name='行为',max_length=32)
+    content = models.CharField(verbose_name='内容',max_length=200)
+    date = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = '日志'
+        verbose_name_plural = '日志'
+

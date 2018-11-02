@@ -1,0 +1,91 @@
+{% extends 'bash/bash-index.html' %}
+{% block head%}
+
+{% endblock %}
+{% block centent %}
+{% load deploy_tag %}
+<div id="content-header">
+    <div id="breadcrumb">
+        <a href="/" class="tip-bottom" data-original-title="Go to Home"><i class="icon-home"></i>Home </a>>
+        <a href="/asset/{{ app_name }}/{{ model_name }}/" class="tip-bottom" data-original-title="">{% build_project_name admin_class %}</a>>
+        <a href="/asset/{{ app_name }}/{{ model_name }}/ADD{% build_project_name admin_class %}" title="添加{% build_project_name admin_class %}" class="tip-bottom" data-original-title="">添加{% build_project_name admin_class %}</a>
+    </div>
+    <div class="col-lg-12 class-title">
+        <div class="ibox float-e-margins" id="all">
+            <div class="quick-actions">
+                <h4>添加{% build_project_verbose_name admin_class %}</h4>
+            </div>
+        </div>
+    </div>
+
+    <div class="row-fluid">
+        <div class="span12">
+            <div class="widget-box">
+                <div class="widget-title span10" style="border: 0px solid">
+                    <ul class="nav nav-tabs col-sm-1" >
+                        <li role="navigation" class="active"><a href="#alert-tab" data-toggle="tab">逐条添加</a></li>
+                        <li role="navigation"><a href="#note-tab" data-toggle="tab">批量添加</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="span12" style="width: 90%">
+            <div class="widget-box">
+                <div id="generalTabContent" class="tab-content responsive">
+                    <div id="alert-tab" class="tab-pane fade in active">
+                         <form method="post">{% csrf_token %}
+                            <div class="modal-body">
+                                <div class="modal-body" >
+                                     <form class="form-horizontal" method="post">{% csrf_token %}
+                                    {% for field in form_obj %}
+                                        <div class="form-group ">
+                                            <label class=" span1" style="width: 8%;font-size: 12px">{{ field.label }}：</label>
+                                            {% if field.name == 'phone' %}
+                                                <input type="text" name="phone" maxlength="11" oninput="value=value.replace(/[^\d]/g,'')">
+                                            {% else %}
+                                            {{ field }}{% endif %}
+                                            <span style="color: red" id="{{ field.name }}_errors">{{ field.errors.0 }}  </span>
+                                        </div>
+                                        <br>
+                                    {% endfor %}
+                                     </form>
+                                </div>
+                                 <div class="form-group">
+                                    <div class="span8">
+                                        <input type="submit" class="btn btn-info" value="保存">
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div id="note-tab" class="tab-pane fade" >
+                        <p>请下载Excel文件, 按照格式填写主机信息, 上传导入. <a href="/asset/{{ app_name }}/{{ model_name }}/download/">点击下载模板</a></p>
+                        <p></p>
+                        <div class="text-left">
+                            <input type="file" id="files">
+                            <input type="button" value="导入配置" class="btn-success btn btn-sm" onclick="upload()" >
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+
+
+
+<script>
+
+    function upload() {
+        upfile = $("#files").val();
+
+    }
+
+
+
+</script>
+{% endblock %}
