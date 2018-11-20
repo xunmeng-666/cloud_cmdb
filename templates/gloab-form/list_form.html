@@ -375,7 +375,7 @@
                         <ul class="pagination">
                             <li class=""><a href="?_page=1{{ filter_condtions_string }}">首页 </a></li>
                             {% for p in paginator.page_range %}
-                                {% if i < 3 %}
+                                {% if p < 3 %}
                                     {% if p == querysets.number %}
                                         <li class="active"><a href="?_page={{ p }}{{ filter_condtions_string }}&_o={{ last_orderby_key }}">{{ p }} </a></li>
                                     {% else %}
