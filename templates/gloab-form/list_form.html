@@ -5,11 +5,11 @@
 {% block centent %}
 {% load deploy_tag %}
 <div id="content-header">
-    <div id="breadcrumb">
+    <ol class="breadcrumb" style="background-color: #ffffff">
         <a href="/" class="tip-bottom" data-original-title="Go to Home"><i class="icon-home"></i>Home </a>>
-        <a href="/asset/idc/" class="tip-bottom" data-original-title="">{% build_project_name admin_class %}</a>>
-        <a href="/asset/idc/" title="数据中心信息表" class="tip-bottom" data-original-title="">机房信息表</a>
-    </div>
+        <a href="/asset/{{ model_name }}/" class="tip-bottom" data-original-title="">{% build_project_verbose_name admin_class %}</a>>
+        <a href="/asset/{{ model_name }}/" title="数据中心信息表" class="tip-bottom" data-original-title="">{% build_project_verbose_name admin_class %}信息表</a>
+    </ol>
     <div class="col-lg-12 class-title">
         <div class="ibox float-e-margins" id="all">
             <div class="quick-actions">
@@ -21,31 +21,39 @@
                         <a href="/asset/{{ app_name }}/{{ model_name }}/add/" class="btn btn-success btn-sm">添加{% build_project_verbose_name admin_class %}</a>
                     </div>
                 </div>
-                <div id="search" style="top: 107px;">
-                    <input type="search" PLACEHOLDER="搜索" />
-                    <button type="submit" class="tip-bottom" data-original-title="Search"><i class="icon-search icon-white"></i></button>
-                </div>
+                <form >
+                    <div id="search" style="top: 107px;">
+                        <input type="search" name="_q" value="{% if q_val %}{{ q_val }}{% endif %}" placeholder="{% for s_field in admin_class.search_fields%}{{ s_field }} {% endfor %}" PLACEHOLDER="搜索" />
+                        <button type="submit" class="tip-bottom" data-original-title="Search"><i class="icon-search icon-white"></i></button>
+                    </div>
+                </form>
             </div>
+            {% get_filter_condtions_string filter_conditions q_val as  filter_condtions_string %}
             <div class="container-fluid">
                 <div class="row-fluid">
                     <form method="post" >{% csrf_token %}
                         <table class="table table-bordered ">
                             <thead>
                                 <tr>
-                                    {% if not  admin_class.list_display %}
+                                    {% if not  admin_class.list_filter %}
                                         <th>{{ model_name }}</th>
                                     {% else %}
                                         <th class='text-center'>
                                             <input onclick="checkAll(this)" type="checkbox" />
                                         </th>
                                         {% for column in admin_class.list_filter %}
-                                            {% if column == 'ID'  %}
-                                                {{ pass }}
-                                            {% else %}
+{#                                            {% if column == 'ID'  %}#}
+{#                                                {{ pass }}#}
+{#                                            {% else %}#}
                                                 <th class='text-center'>
-                                                {{ column }}
+                                                {% if order_column == column  %}
+                                                   {{ column }}
+                                                    {% generate_orderby_icon  new_order_key %}
+                                                {% else %}
+                                                    {{ column }}
+                                                {% endif %}
                                                 </th>
-                                            {% endif %}
+{#                                            {% endif %}#}
                                         {% endfor %}
                                         <th class='text-center' >操作</th>
                                     {% endif %}
@@ -55,26 +63,303 @@
                                 {% for row in querysets %}
                                 <div class="col-lg-12">
                                     <div method="post">
-                                        {% if row in querysets %}
-                                        <tr class='gradeX '  >
-
-                                            <td class='text-center' style="text-align: center">
-                                                <input type='checkbox'  class='row-obj' name ='_selected_obj'  value='{{ row.id }}'></td>
-                                            <td style="text-align: center">{{ row.name }}</td>
-                                            <td style="text-align: center">{{ row.address }}</td>
-                                            <td style="text-align: center">{% if row.contacts == None %}{% else %}{{ row.contacts }}{% endif %}</td>
-                                            <td style="text-align: center">{% if row.phone == None %}{% else %}{{ row.phone }}{% endif %}</td>
-                                            <td style="text-align: center">{% if row.remarks == None %}{% else %}{{ row.remarks }}{% endif %}</td>
-                                            <form method='POST'>
-                                                {% csrf_token %}
-                                                <td class="text-center" style="text-align: center">
-                                                    <a href="/asset/{{ app_name }}/{{ model_name }}/del/?idAll={{ row.id }}" class="btn btn-mini btn-danger asset_del"  >删除</a>
+{#                                        {% if row in querysets %}#}
+                                            {% if model_name == 'idc'  %}
+                                            <tr class='gradeX '  >
+                                                <td class='text-center' style="text-align: center">
+                                                    <input type='checkbox'  class='row-obj' name ='_selected_obj'  value='{{ row.id }}'></td>
+                                                <td style="text-align: center">
+                                                    <a href="">{{ row.id }}</a>
                                                 </td>
-                                            </form>
-                                        </tr>
-                                    {% else %}
-                                        <tr class='gradeX '></tr>
-                                    {% endif %}
+                                                <td style="text-align: center">
+                                                    <a href="/asset/{{ app_name }}/{{ model_name }}/detail/?id={{ row.id }}&name={{ row.name }}">{{ row.name }}</a>
+                                                </td>
+                                                <td style="text-align: center">
+                                                    <a href="">{{ row.address }}</a>
+                                                </td>
+                                                <td style="text-align: center">{% if row.contacts == None %}{% else %}{{ row.contacts }}{% endif %}</td>
+                                                <td style="text-align: center">{% if row.phone == None %}{% else %}{{ row.phone }}{% endif %}</td>
+                                                <td style="text-align: center">{% if row.remarks == None %}{% else %}{{ row.remarks }}{% endif %}</td>
+                                                <form method='POST'>
+                                                    {% csrf_token %}
+                                                    <td class="text-center" style="text-align: center">
+                                                        <a href="/asset/{{ app_name }}/{{ model_name }}/change/?project_id={{ row.id }}" class="btn btn-mini btn-info asset_del"  >编辑</a>
+                                                        <a href="/asset/{{ app_name }}/{{ model_name }}/del/?idAll={{ row.id }}" class="btn btn-mini btn-danger asset_del"  >删除</a>
+                                                    </td>
+                                                </form>
+                                            </tr>
+                                            {% elif model_name == 'cabint' %}
+                                                <tr class='gradeX '  >
+                                                <td class='text-center' style="text-align: center">
+                                                    <input type='checkbox'  class='row-obj' name ='_selected_obj'  value='{{ row.id }}'></td>
+                                                <td style="text-align: center">
+                                                    <a href="">{{ row.id }}</a>
+                                                </td>
+                                                <td style="text-align: center">
+                                                    <a href="/asset/{{ app_name }}/{{ model_name }}/detail/?id={{ row.id }}&name={{ row.number }}">{{ row.number }}</a>
+                                                </td>
+                                                <td style="text-align: center">{{ row.size }}</td>
+                                                <td style="text-align: center">
+                                                    <a href="/asset/servers/?_q={{ row.number }}">{{ row.useposition }}</a>
+                                                </td>
+                                                <td style="text-align: center">{{ row.room_number }}</td>
+                                                <td style="text-align: center">{{ row.idc.name }}</td>
+                                                <form method='POST'>
+                                                    {% csrf_token %}
+                                                    <td class="text-center" style="text-align: center">
+                                                        <a href="/asset/{{ app_name }}/{{ model_name }}/change/?project_id={{ row.id }}" class="btn btn-mini btn-info asset_del"  >编辑</a>
+                                                        <a href="/asset/{{ app_name }}/{{ model_name }}/del/?idAll={{ row.id }}" class="btn btn-mini btn-danger asset_del"  >删除</a>
+                                                    </td>
+                                                </form>
+                                            </tr>
+                                            {% elif model_name == 'company' %}
+                                                <tr class='gradeX '  >
+                                                    <td class='text-center' style="text-align: center">
+                                                        <input type='checkbox'  class='row-obj' name ='_selected_obj'  value='{{ row.id }}'></td>
+                                                    <td style="text-align: center">
+                                                        <a href="">{{ row.id }}</a>
+                                                    </td>
+                                                    <td style="text-align: center">{{ row.name }}</td>
+                                                    <td style="text-align: center">{{ row.model }}</td>
+                                                    <td style="text-align: center">{{ row.get_types_display }}</td>
+                                                    <td style="text-align: center">{{ row.height }}</td>
+
+                                                    <form method='POST'>
+                                                        {% csrf_token %}
+                                                        <td class="text-center" style="text-align: center">
+                                                            <a href="/asset/{{ app_name }}/{{ model_name }}/change/?project_id={{ row.id }}" class="btn btn-mini btn-info asset_del"  >编辑</a>
+                                                            <a href="/asset/{{ app_name }}/{{ model_name }}/del/?idAll={{ row.id }}" class="btn btn-mini btn-danger asset_del"  >删除</a>
+                                                        </td>
+                                                    </form>
+                                                </tr>
+                                            {% elif model_name == 'device' %}
+                                                <tr class='gradeX '  >
+                                                    <td class='text-center' style="text-align: center">
+                                                        <input type='checkbox'  class='row-obj' name ='_selected_obj'  value='{{ row.id }}'></td>
+                                                    <td style="text-align: center">
+                                                        <a href="">{{ row.id }}</a>
+                                                    </td>
+                                                    <td style="text-align: center">
+                                                        <a href="/asset/{{ app_name }}/{{ model_name }}/detail/?id={{ row.id }}">
+                                                            {{ row.sn }}
+                                                        </a>
+                                                    </td>
+                                                    <td style="text-align: center">{{ row.company.name }}</td>
+                                                    <td style="text-align: center">
+                                                        <a href="/asset/{{ app_name }}/{{ model_name }}/detail/?id={{ row.id }}&ip={{ row.ipaddress }}">
+                                                            {{ row.ipaddress }}
+                                                        </a>
+                                                    </td>
+                                                    <td style="text-align: center">{{ row.company.height }}U</td>
+                                                    <td style="text-align: center">{{ row.cabint }}</td>
+                                                    <td style="text-align: center">{{ row.position }}</td>
+                                                    {% if row.get_device_statuses_display == '已启用' %}
+                                                        <td style="text-align: center;background-color: #31ff1e">{{ row.get_device_statuses_display }}</td>
+                                                    {% else %}
+                                                        <td style="text-align: center;background-color: #ff1b2e">{{ row.get_device_statuses_display }}</td>
+                                                    {% endif %}
+                                                    <td style="text-align: center">{{ row.group }}</td>
+                                                    <td style="text-align: center">{{ row.warranty}}</td>
+                                                    <td style="text-align: center">{{ row.start_date|date:"Y-m-d H:i:s" }}</td>
+                                                    {% if row.end_date == None %}
+                                                    <td style="text-align: center">None</td>
+                                                    {% else %}
+                                                    <td style="text-align: center">{{ row.end_date|date:"Y-m-d H:i:s" }}</td>
+                                                    {% endif %}
+                                                    <td style="text-align: center">{{ row.contacts }}</td>
+                                                    <form method='POST'>
+                                                        {% csrf_token %}
+                                                        <td class="text-center" style="text-align: center">
+                                                            <a href="/asset/{{ app_name }}/{{ model_name }}/change/?project_id={{ row.id }}" class="btn btn-mini btn-info asset_del"  >编辑</a>
+                                                            <a href="/asset/{{ app_name }}/{{ model_name }}/del/?idAll={{ row.id }}" class="btn btn-mini btn-danger asset_del"  >删除</a>
+                                                        </td>
+                                                    </form>
+                                                </tr>
+                                            {% elif model_name == 'warranty' %}
+                                                <tr class='gradeX '  >
+                                                    <td class='text-center' style="text-align: center">
+                                                        <input type='checkbox'  class='row-obj' name ='_selected_obj'  value='{{ row.id }}'>
+                                                    </td>
+                                                    <td style="text-align: center">{{ row.company }}</td>
+                                                    <td style="text-align: center">{{ row.start_date|date:"Y-m-d H:i:s" }}</td>
+                                                    {% if row.end_date == None %}
+                                                    <td style="text-align: center">None</td>
+                                                    {% else %}
+                                                    <td style="text-align: center">{{ row.end_date|date:"Y-m-d H:i:s" }}</td>
+                                                    {% endif %}
+                                                    <form method='POST'>
+                                                        {% csrf_token %}
+                                                        <td class="text-center" style="text-align: center">
+                                                            <a href="/asset/{{ app_name }}/{{ model_name }}/change/?project_id={{ row.id }}" class="btn btn-mini btn-info asset_del"  >编辑</a>
+                                                            <a href="/asset/{{ app_name }}/{{ model_name }}/del/?idAll={{ row.id }}" class="btn btn-mini btn-danger asset_del"  >删除</a>
+                                                        </td>
+                                                    </form>
+                                                </tr>
+                                            {% elif model_name == 'group' %}
+                                                <tr class='gradeX '  >
+                                                    <td class='text-center' style="text-align: center">
+                                                        <input type='checkbox'  class='row-obj' name ='_selected_obj'  value='{{ row.id }}'></td>
+                                                    <td style="text-align: center">
+                                                        <a href="">{{ row.id }}</a>
+                                                    </td>
+                                                    <td style="text-align: center">{{ row.name }}</td>
+
+                                                    <form method='POST'>
+                                                        {% csrf_token %}
+                                                        <td class="text-center" style="text-align: center">
+                                                            <a href="/asset/{{ app_name }}/{{ model_name }}/change/?project_id={{ row.id }}" class="btn btn-mini btn-info asset_del"  >编辑</a>
+                                                            <a href="/asset/{{ app_name }}/{{ model_name }}/del/?idAll={{ row.id }}" class="btn btn-mini btn-danger asset_del"  >删除</a>
+                                                        </td>
+                                                    </form>
+                                                </tr>
+                                            {% elif model_name == 'cpu' %}
+                                                <tr class='gradeX '  >
+                                                    <td class='text-center' style="text-align: center">
+                                                        <input type='checkbox'  class='row-obj' name ='_selected_obj'  value='{{ row.id }}'></td>
+                                                    <td style="text-align: center">
+                                                        <a href="">{{ row.id }}</a>
+                                                    </td>
+                                                    <td style="text-align: center">{{ row.company.name }}</td>
+                                                    <td style="text-align: center">{{ row.kernel }}</td>
+                                                    <td style="text-align: center">{{ row.frequency }}</td>
+                                                    <td style="text-align: center">{{ row.counts }}</td>
+                                                    <td style="text-align: center"><a href="/asset/{{ app_name }}/servers/detail/?id={{ row.server.id }}">{{ row.server.hostname }}</a></td>
+
+                                                    <form method='POST'>
+                                                        {% csrf_token %}
+                                                        <td class="text-center" style="text-align: center">
+                                                            <a href="/asset/{{ app_name }}/{{ model_name }}/change/?project_id={{ row.id }}" class="btn btn-mini btn-info asset_del"  >编辑</a>
+                                                            <a href="/asset/{{ app_name }}/{{ model_name }}/del/?idAll={{ row.id }}" class="btn btn-mini btn-danger asset_del"  >删除</a>
+                                                        </td>
+                                                    </form>
+                                                </tr>
+                                            {% elif model_name == 'servers' %}
+                                                <tr class='gradeX '  >
+                                                    <td class='text-center' style="text-align: center">
+                                                        <input type='checkbox'  class='row-obj' name ='_selected_obj'  value='{{ row.id }}'></td>
+                                                    <td style="text-align: center">
+                                                        <a href="">{{ row.id }}</a>
+                                                    </td>
+                                                    <td style="text-align: center">{{ row.sn }}</td>
+                                                    <td style="text-align: center">{{ row.cabint }}</td>
+                                                    <td style="text-align: center">
+                                                        <a href="/asset/{{ app_name }}/{{ model_name }}/detail/?id={{ row.id }}">{{ row.hostname }}</a>
+                                                    </td>
+                                                    <td style="text-align: center">{{ row.ipaddress }}</td>
+                                                    {% if not row.vlan.number %}
+                                                    <td style="text-align: center">None</td>
+                                                    {% else %}
+                                                    <td style="text-align: center">{{ row.vlan.number }}</td>
+                                                    {% endif %}
+                                                    <td style="text-align: center">{{ row.group }}</td>
+                                                    {% if row.get_status_display == '已启用' %}
+                                                        <td style="text-align: center;background-color: #31ff1e">{{ row.get_status_display }}</td>
+                                                    {% else %}
+                                                        <td style="text-align: center;background-color: #ff1b2e">{{ row.get_device_status_display }}</td>
+                                                    {% endif %}
+                                                    <td style="text-align: center">{{ row.warranty }}</td>
+                                                    <td style="text-align: center">{{ row.userinfo }}</td>
+                                                    <td style="text-align: center">{{ row.contacts }}</td>
+
+                                                    <form method='POST'>
+                                                        {% csrf_token %}
+                                                        <td class="text-center" style="text-align: center">
+                                                            <a href="/asset/{{ app_name }}/{{ model_name }}/change/?project_id={{ row.id }}" class="btn btn-mini btn-info asset_del"  >编辑</a>
+                                                            <a href="/asset/{{ app_name }}/{{ model_name }}/del/?idAll={{ row.id }}" class="btn btn-mini btn-danger asset_del"  >删除</a>
+                                                        </td>
+                                                    </form>
+                                                </tr>
+                                            {% elif model_name == 'disk' %}
+                                                <tr class='gradeX '  >
+                                                    <td class='text-center' style="text-align: center">
+                                                        <input type='checkbox'  class='row-obj' name ='_selected_obj'  value='{{ row.sn }}'></td>
+                                                    <td style="text-align: center">
+                                                        <a href="">{{ row.id }}</a>
+                                                    </td>
+                                                    <td style="text-align: center">{{ row.sn }}</td>
+                                                    <td style="text-align: center">{{ row.company.name }}</td>
+                                                    <td style="text-align: center">{{ row.get_types_display }}</td>
+                                                    <td style="text-align: center">{{ row.size }}</td>
+                                                    <td style="text-align: center"><a href="/asset/{{ app_name }}/servers/detail/?id={{ row.server.id }}">{{ row.server.hostname }}</a></td>
+                                                    {% if row.get_status_display == '已启用' %}
+                                                        <td style="text-align: center;background-color: #31ff1e">{{ row.get_status_display }}</td>
+                                                    {% else %}
+                                                        <td style="text-align: center;background-color: #ff1b2e">{{ row.get_status_display }}</td>
+                                                    {% endif %}
+                                                    <td style="text-align: center">{{ row.remarks }}</td>
+
+                                                    <form method='POST'>
+                                                        {% csrf_token %}
+                                                        <td class="text-center" style="text-align: center">
+                                                            <a href="/asset/{{ app_name }}/{{ model_name }}/change/?project_id={{ row.id }}" class="btn btn-mini btn-info asset_del"  >编辑</a>
+                                                            <a href="/asset/{{ app_name }}/{{ model_name }}/del/?idAll={{ row.id }}" class="btn btn-mini btn-danger asset_del"  >删除</a>
+                                                        </td>
+                                                    </form>
+                                                </tr>
+                                            {% elif model_name == 'ram' %}
+                                                <tr class='gradeX '  >
+                                                    <td class='text-center' style="text-align: center">
+                                                        <input type='checkbox'  class='row-obj' name ='_selected_obj'  value='{{ row.id }}'></td>
+                                                    <td style="text-align: center">
+                                                        <a href="">{{ row.id }}</a>
+                                                    </td>
+                                                    <td style="text-align: center">{{ row.company.name }}</td>
+                                                    <td style="text-align: center">{{ row.size }}</td>
+                                                    <td style="text-align: center"><a href="/asset/{{ app_name }}/servers/detail/?id={{ row.server.id }}">{{ row.server.hostname }}</a></td>
+
+                                                    <form method='POST'>
+                                                        {% csrf_token %}
+                                                        <td class="text-center" style="text-align: center">
+                                                            <a href="/asset/{{ app_name }}/{{ model_name }}/change/?project_id={{ row.id }}" class="btn btn-mini btn-info asset_del"  >编辑</a>
+                                                            <a href="/asset/{{ app_name }}/{{ model_name }}/del/?idAll={{ row.id }}" class="btn btn-mini btn-danger asset_del"  >删除</a>
+                                                        </td>
+                                                    </form>
+                                                </tr>
+                                            {% elif model_name == 'nic' %}
+                                                <tr class='gradeX '  >
+                                                    <td class='text-center' style="text-align: center">
+                                                        <input type='checkbox'  class='row-obj' name ='_selected_obj'  value='{{ row.id }}'></td>
+                                                    <td style="text-align: center">
+                                                        <a href="">{{ row.id }}</a>
+                                                    </td>
+                                                    <td style="text-align: center">{{ row.sn }}</td>
+                                                    <td style="text-align: center">{{ row.company.name }}</td>
+                                                    <td style="text-align: center">{{ row.ipaddress }}</td>
+                                                    <td style="text-align: center">{{ row.get_model_display }}</td>
+                                                    <td style="text-align: center">{{ row.mac_address }}</td>
+                                                    <td style="text-align: center">{{ row.get_types_display }}</td>
+                                                    <td style="text-align: center"><a href="/asset/{{ app_name }}/protocol/detail/?id={{ row.protocol.id }}">{{ row.protocol.number }}</a></td>
+                                                    <td style="text-align: center">{{ row.get_speed_display }}</td>
+                                                    <td style="text-align: center"><a href="/asset/{{ app_name }}/servers/detail/?id={{ row.server.id }}">{{ row.server.hostname }}</a></td>
+                                                    <td style="text-align: center">{{ row.remarks }}</td>
+
+                                                    <form method='POST'>
+                                                        {% csrf_token %}
+                                                        <td class="text-center" style="text-align: center">
+                                                            <a href="/asset/{{ app_name }}/{{ model_name }}/change/?project_id={{ row.id }}" class="btn btn-mini btn-info asset_del"  >编辑</a>
+                                                            <a href="/asset/{{ app_name }}/{{ model_name }}/del/?idAll={{ row.id }}" class="btn btn-mini btn-danger asset_del"  >删除</a>
+                                                        </td>
+                                                    </form>
+                                                </tr>
+                                            {% elif model_name == 'protocol' %}
+                                                <tr class='gradeX '  >
+                                                    <td class='text-center' style="text-align: center">
+                                                        <input type='checkbox'  class='row-obj' name ='_selected_obj'  value='{{ row.id }}'></td>
+                                                    <td style="text-align: center">{{ row.get_name_display }}</td>
+                                                    <td style="text-align: center">{{ row.number }}</td>
+                                                    <td style="text-align: center">{{ row.ipaddress }}</td>
+                                                    <td style="text-align: center">{{ row.port_range }}</td>
+                                                    <td style="text-align: center">{{ row.device }}</td>
+                                                    <form method='POST'>
+                                                        {% csrf_token %}
+                                                        <td class="text-center" style="text-align: center">
+                                                            <a href="/asset/{{ app_name }}/{{ model_name }}/change/?project_id={{ row.id }}" class="btn btn-mini btn-info asset_del"  >编辑</a>
+                                                            <a href="/asset/{{ app_name }}/{{ model_name }}/del/?idAll={{ row.id }}" class="btn btn-mini btn-danger asset_del"  >删除</a>
+                                                        </td>
+                                                    </form>
+                                                </tr>
+                                            {% endif %}
+
                                     </div>
                                 </div>{% endfor %}
                             </tbody>
@@ -121,6 +406,7 @@
 
 function all_del_file(self) {
     var check = document.getElementsByName("_selected_obj");
+    console.log('check',check);
     var len = check.length;
     var idAll = "";
     for (var i = 0; i<len;i++){
@@ -137,7 +423,7 @@ function all_del_file(self) {
         url:"/asset/{{ app_name }}/{{ model_name }}/del/?idAll=" + idAll,
         type: 'post',
         success:function (data) {
-            alert('删除成功');
+            alert('删除成功',data);
             location.reload(true)
         }
     })

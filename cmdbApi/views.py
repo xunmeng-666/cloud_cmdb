@@ -40,6 +40,20 @@ class CabintDetail(generics.RetrieveUpdateDestroyAPIView):
         IsAuthenticatedOrReadOnly,
     )
 
+class GroupList(generics.ListCreateAPIView):
+    queryset = Group.objects.all()
+    serializer_class = GroupSerializer
+    permission_classes = (
+        IsAuthenticatedOrReadOnly,
+    )
+
+class GroupDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Group.objects.all()
+    serializer_class = GroupSerializer
+    permission_classes = (
+        IsAuthenticatedOrReadOnly,
+    )
+
 class ServerList(generics.ListCreateAPIView):
     queryset = Servers.objects.all()
     serializer_class = ServerSerializer
@@ -53,10 +67,10 @@ class ServerDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = (
         IsAuthenticatedOrReadOnly,
     )
+
 class CompanyList(generics.ListCreateAPIView):
     queryset = Company.objects.all()
     serializer_class = CompanySerializer
-
     permission_classes = (
         IsAuthenticatedOrReadOnly,
     )
@@ -71,20 +85,20 @@ class CompanyDetail(generics.RetrieveUpdateDestroyAPIView):
 
 
 
-# class AppList(generics.ListCreateAPIView):
-#     queryset = Application.objects.all()
-#     serializer_class = ApplicationSerializer
-#     permission_classes = (
-#         IsAuthenticatedOrReadOnly,
-#     )
-#
-# class AppDetail(generics.RetrieveUpdateDestroyAPIView):
-#     queryset = Application.objects.all()
-#     serializer_class = ApplicationSerializer
-#     permission_classes = (
-#         IsAuthenticatedOrReadOnly,
-#     )
-#
+class warrantyList(generics.ListCreateAPIView):
+    queryset = Warranty.objects.all()
+    serializer_class = WarrantySerializer
+    permission_classes = (
+        IsAuthenticatedOrReadOnly,
+    )
+
+class warrantyDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Warranty.objects.all()
+    serializer_class = WarrantySerializer
+    permission_classes = (
+        IsAuthenticatedOrReadOnly,
+    )
+
 class NicList(generics.ListCreateAPIView):
     queryset = Nic.objects.all()
     serializer_class = NicSerializer
@@ -142,14 +156,14 @@ class CpuDetail(generics.RetrieveUpdateDestroyAPIView):
     )
 
 class DeviceList(generics.ListCreateAPIView):
-    queryset = Devices.objects.all()
+    queryset = Device.objects.all()
     serializer_class = DeviceSerializer
     permission_classes = (
         IsAuthenticatedOrReadOnly,
     )
 
 class DeviceDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Devices.objects.all()
+    queryset = Device.objects.all()
     serializer_class = DeviceSerializer
     permission_classes = (
         IsAuthenticatedOrReadOnly,

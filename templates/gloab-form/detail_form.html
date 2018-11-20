@@ -1,0 +1,147 @@
+{% extends 'bash/bash-index.html' %}
+{% block head%}
+
+{% endblock %}
+{% block centent %}
+{% load deploy_tag %}
+<div id="content-header">
+    <ol class="breadcrumb" style="background-color: #ffffff">
+        <a href="/" class="tip-bottom" data-original-title="Go to Home"><i class="icon-home"></i>Home </a>>
+        <a href="/asset/{{ model_name }}/" class="tip-bottom" data-original-title="">{% build_project_verbose_name admin_class %}</a>>
+        <a href="/asset/{{ model_name }}/" title="数据中心信息表" class="tip-bottom" data-original-title="">{% build_project_verbose_name admin_class %}详情表</a>
+    </ol>
+    <div class="col-lg-12 class-title">
+        <div class="ibox float-e-margins" id="all">
+            <div class="quick-actions">
+                <h2>{% build_project_verbose_name admin_class %}</h2>
+            </div>
+
+            <div class="container-fluid">
+                <div class="row-fluid">
+                    <form method="post" >{% csrf_token %}
+                        <table class="table table-bordered ">
+                            <thead>
+                                <tr>
+                                    {% if model_name == 'idc' %}
+                                    <th class='text-center'>机柜编号</th>
+                                    <th class='text-center'>机柜使用百分比(%)</th>
+                                    {% elif model_name == 'cabint' %}
+                                        <th class='text-center'>机柜编号</th>
+                                        <th class='text-center'>设备所在位置</th>
+                                        <th class='text-center'>设备名称</th>
+                                        <th class='text-center'>设备IP</th>
+                                        <th class='text-center'>设备高度</th>
+                                    {% elif model_name == 'device' %}
+                                        <th class="text-center">设备名称</th>
+                                        <th class="text-center">设备IP</th>
+                                        <th class="text-center">协议号</th>
+                                        <th class="text-center">端口</th>
+                                        <th class="text-center">服务器</th>
+                                    {% elif model_name == 'servers' %}
+                                        <th class="text-center">主机名</th>
+                                        <th class="text-center">主机IP</th>
+                                        <th class="text-center">CPU核数</th>
+                                        <th class="text-center">CPU数量</th>
+                                        <th class="text-center">内存</th>
+                                        <th class="text-center">硬盘</th>
+                                        <th class="text-center">网卡IP</th>
+                                        <th class="text-center">VLAN</th>
+                                        <th class="text-center">交换机</th>
+                                    {% elif model_name == 'protocol' %}
+                                        <th class="text-center">协议名称</th>
+                                        <th class="text-center">协议号</th>
+                                        <th class="text-center">IP地址</th>
+                                        <th class="text-center">端口范围</th>
+                                        <th class="text-center">设备</th>
+                                    {% endif %}
+                                </tr>
+
+                            </thead>
+                            <tbody id="tbody" class="tab-content responsive">
+                                <div class="col-lg-12">
+                                    {% if model_name == 'idc' %}
+                                        {% build_cabint_listinfo obj obj_id%}
+                                    {% elif model_name == 'cabint' %}
+                                        {% build_cabint_useinfo obj obj_id%}
+                                    {% elif model_name == 'device' %}
+                                        {% build_device_info obj obj_id %}
+                                    {% elif model_name == 'servers' %}
+                                        {% build_servers_info obj obj_id %}
+                                    {% elif model_name == 'protocol' %}
+                                        {% build_protocol_info obj obj_id %}
+                                    {% endif %}
+                                </div>
+                            </tbody>
+                        </table>
+                    </form>
+                    <div class="pagination">
+                        <ul class="pagination">
+                            <li class=""><a href="?_page=1{{ filter_condtions_string }}">首页 </a></li>
+                            {% for p in paginator.page_range %}
+                                {% if i < 3 %}
+                                    {% if p == querysets.number %}
+                                        <li class="active"><a href="?_page={{ p }}{{ filter_condtions_string }}&_o={{ last_orderby_key }}">{{ p }} </a></li>
+                                    {% else %}
+                                        <li class=""><a href="?_page={{ p }}{{ filter_condtions_string }}&_o={{ last_orderby_key }}">{{ p }}</a></li>
+                                    {% endif %}
+                                {% endif %}
+                            {% endfor %}
+                            <li class="">
+                                <a  href="?_page={{ paginator.num_pages }}{{ filter_condtions_string }}&_o={{ last_orderby_key }}">尾页</a>
+                            </li>
+                            <li class="">
+                                <a>总计 {{ querysets.paginator.num_pages }}页</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+
+
+
+<script>
+
+function all_del_file(self) {
+    var check = document.getElementsByName("_selected_obj");
+    console.log('check',check);
+    var len = check.length;
+    var idAll = "";
+    for (var i = 0; i<len;i++){
+        if(check[i].checked){
+            idAll += check[i].value+',';
+        }
+    }
+    if(idAll == ''){
+        var td_id = $(this).closest('tr').find('th').eq(1).text();
+        idAll = td_id + ',' ;
+    }
+    console.log('idall',idAll);
+    $.ajax({
+        url:"/asset/{{ app_name }}/{{ model_name }}/del/?idAll=" + idAll,
+        type: 'post',
+        success:function (data) {
+            alert('删除成功',data);
+            location.reload(true)
+        }
+    })
+}
+
+
+function checkAll(self) {
+    if ( $(self).prop('checked')){
+
+        $("table .row-obj").prop('checked',true)
+    }else {
+         $("table .row-obj").prop('checked',false)
+    }
+
+}
+
+</script>
+{% endblock %}
