@@ -4,7 +4,7 @@
 class BaseAdmin(object):
     list_display = ()
     list_filter = ()
-    list_per_page = 10
+    list_per_page = 3
     default_actions = ["delete_obj"]
 
 

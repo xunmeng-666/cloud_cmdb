@@ -1,3 +1,5 @@
+# -*- coding:utf-8-*-
+
 from django.shortcuts import render,redirect,HttpResponse
 from django.http import FileResponse
 from django.db.models import Q
@@ -8,6 +10,7 @@ from django.contrib.auth.decorators import login_required
 from cmdbServer.admin_base import site
 from cmdbServer import forms
 from cmdbServer.core.fileFunc import fileFunc
+from cmdbServer.core.model_func import savelog,readlog
 import json
 # Create your views here.
 
@@ -16,21 +19,23 @@ def account_login(request):
         username = request.POST.get("username")
         password = request.POST.get("password")
         user = authenticate(username=username,password=password)
+        savelog.log_info(username, "Info","尝试登录系统")
         if user:
             login(request,user)
-            # save_db.save_logs_to_db("User:%s Login system" % request.user)
+            savelog.log_info(username,"Success","成功登录系统")
             return  redirect(request.GET.get('next') or '/')
-
+        savelog.log_info(username,"Error","登录系统失败")
     return render(request, 'login.html', locals())
 
 def account_logout(request,**kwargs):
+    savelog.log_info(request.user,"Info","登出服务器")
     request.session.clear()
     logout(request)
-
     return redirect('/accounts/login/')
 
 @login_required
 def index(request):
+    savelog.log_info("%s"%request.user,"Info",'AccessUrl:%s'%request.get_raw_uri())
     for app_name in site.registered_admins:
         admin_class = site.registered_admins[app_name]['idc']
         objects = admin_class.model.objects.values('id','name')
@@ -103,20 +108,14 @@ def get_orderby_objs(request, querysets):
     else:
         return querysets, None, None, last_orderby_key
 
-# @login_required
+@login_required
 def idc(request,no_render=False):
     model_name = 'idc'
-    # admin_class = adminfunc()[model_name]
     for app_name in site.registered_admins:
-        # for model_name in site.registered_admins[app_name]:
         admin_class = site.registered_admins[app_name][model_name]
         form = forms.create_dynamic_modelform(admin_class.model)
-        if request.method == 'POST':
-            form_obj = form(data = request.POST)
-            if form_obj.is_valid():
-                form_obj.save()
-                return redirect("/asset/idc/")
-        elif request.method == 'GET':
+        if request.method == 'GET':
+            savelog.log_info("%s" % request.user, "Info",'AccessURL:%s' % request.get_raw_uri())
             form_obj = form()
             querysets, filter_conditions = get_filter_objs(request, admin_class)
 
@@ -134,12 +133,13 @@ def idc(request,no_render=False):
             return locals()
         return render(request,'idc/idc.html',locals())
 
-
-def add_idc(request,app_name,model_name):
+@login_required
+def table_obj_add(request,app_name,model_name):
 
     admin_class = site.registered_admins[app_name][model_name]
     form = forms.create_dynamic_modelform(admin_class.model)
     if request.method == 'POST':
+        savelog.log_info("%s" % request.user,"Create",request.POST)
         form_obj = form(data=request.POST)
         if form_obj.is_valid():
             form_obj.save()
@@ -148,30 +148,21 @@ def add_idc(request,app_name,model_name):
         form_obj = form()
     return render(request,'gloab-form/add_form.html',locals())
 
+@login_required
 def table_obj_detail(request,app_name,model_name):
-
+    savelog.log_info("%s" % request.user, "Info",'访问URL:%s' % request.get_raw_uri())
     admin_class = site.registered_admins[app_name][model_name]
     obj = admin_class.model.objects.all()
-    obj_id = request.GET.get('id')
-    if model_name == 'idc':
-        '''显示机柜数量，机柜使用百分比'''
-        objects = obj.filter(id=obj_id).values('cabintd__number','cabintd__size','cabintd__useposition')
-    elif model_name == 'cabint':
-        '''显示单个几个使用详情，机柜编号，位置、设备IP、服务器IP'''
-        objects = obj.filter(id=obj_id).values('number','useposition','devices__company__name',"devices__position",
-                                               "servers__hostname","servers__position")
-    elif model_name == 'devices':
-        pass
-    elif model_name == "servers":
-        pass
-
-
-
+    if model_name == 'bonding':
+        obj_id = request.GET.get('device')
+    else:
+        obj_id = request.GET.get('id')
     return render(request,'gloab-form/detail_form.html',locals())
 
-
+@login_required
 @csrf_exempt
 def table_obj_del(request,app_name,model_name):
+    savelog.log_info("%s" % request.user, "Info",'访问URL:%s' % request.get_raw_uri())
     obj_id = request.GET.get('idAll')
     admin_class = site.registered_admins[app_name][model_name]
     if ',' in obj_id:
@@ -180,13 +171,16 @@ def table_obj_del(request,app_name,model_name):
             if id:
                 obj = admin_class.model.objects.get(id=id.strip())
                 obj.delete()
+                savelog.log_info("%s" % request.user,"Delete", {'id': id.strip(), "名称": obj._meta.fields[1].name})
                 status['success'].append(id)
         return HttpResponse(json.dumps(status))
     else:
         obj = admin_class.model.objects.get(id=obj_id)
         obj.delete()
+        savelog.log_info("%s" % request.user, "Delete",{'Status':'Seccuss',"data":{'id': obj_id, "主机": obj.hostname}})
         return redirect("/asset/{model_name}".format(model_name=model_name))
 
+@login_required
 @csrf_exempt
 def table_obj_change(request,app_name,model_name,no_render=False):
     admin_class = site.registered_admins[app_name][model_name]
@@ -200,13 +194,16 @@ def table_obj_change(request,app_name,model_name,no_render=False):
         form_obj = form(instance=obj,data=request.POST)
         if form_obj.is_valid():
             form_obj.save()
+            savelog.log_info("%s" % request.user,"Updata",request.POST)
             return redirect("/asset/%s"%model_name)
     if no_render:
         return locals()
     else:
         return render(request,'gloab-form/change_form.html',locals())
 
+@login_required
 def cabint(request, no_render=False):
+    savelog.log_info("%s" % request.user, "Info",'访问URL:%s' % request.get_raw_uri())
     model_name = 'cabint'
     for app_name in site.registered_admins:
         admin_class = site.registered_admins[app_name][model_name]
@@ -234,7 +231,9 @@ def cabint(request, no_render=False):
             return locals()
         return render(request, 'idc/cabint.html', locals())
 
+@login_required
 def company(request,no_render=False):
+    savelog.log_info("%s" % request.user, "Info",'访问URL:%s' % request.get_raw_uri())
     model_name = 'company'
     for app_name in site.registered_admins:
         admin_class = site.registered_admins[app_name][model_name]
@@ -262,8 +261,9 @@ def company(request,no_render=False):
             return locals()
         return render(request, 'company/company_list.html', locals())
 
-
+@login_required
 def device(request,no_render=False):
+    savelog.log_info("%s" % request.user, "Info",'访问URL:%s' % request.get_raw_uri())
     model_name = 'device'
     for app_name in site.registered_admins:
         admin_class = site.registered_admins[app_name][model_name]
@@ -277,8 +277,6 @@ def device(request,no_render=False):
             form_obj = form()
 
             querysets, filter_conditions = get_filter_objs(request, admin_class)
-            for row in querysets:
-                print("row", row)
             querysets, q_val = get_search_objs(request, querysets, admin_class)
             querysets, new_order_key, order_column, last_orderby_key = get_orderby_objs(request, querysets)
             paginator = Paginator(querysets, admin_class.list_per_page)  # Show 25 contacts per page
@@ -289,12 +287,13 @@ def device(request,no_render=False):
                 querysets = paginator.page(1)
             except EmptyPage:
                 querysets = paginator.page(paginator.num_pages)
-
         if no_render:
             return locals()
         return render(request, 'device/device_list.html', locals())
 
+@login_required
 def device_group(request,no_render=False):
+    savelog.log_info("%s" % request.user, "Info",'访问URL:%s' % request.get_raw_uri())
     model_name = 'group'
     for app_name in site.registered_admins:
         admin_class = site.registered_admins[app_name][model_name]
@@ -310,7 +309,7 @@ def device_group(request,no_render=False):
             querysets, filter_conditions = get_filter_objs(request, admin_class)
             querysets, q_val = get_search_objs(request, querysets, admin_class)
             querysets, new_order_key, order_column, last_orderby_key = get_orderby_objs(request, querysets)
-            paginator = Paginator(querysets, admin_class.list_per_page)  # Show 25 contacts per page
+            paginator = Paginator(querysets, admin_class.list_per_page)
             page = request.GET.get('_page')
             try:
                 querysets = paginator.page(page)
@@ -323,7 +322,9 @@ def device_group(request,no_render=False):
             return locals()
         return render(request, 'device/device_group.html', locals())
 
+@login_required
 def server(request,no_render=False):
+    savelog.log_info("%s" % request.user, "Info",'访问URL:%s' % request.get_raw_uri())
     model_name = 'servers'
     for app_name in site.registered_admins:
         admin_class = site.registered_admins[app_name][model_name]
@@ -352,7 +353,9 @@ def server(request,no_render=False):
             return locals()
         return render(request, 'gloab-form/list_form.html', locals())
 
+@login_required
 def warranty(request,no_render=False):
+    savelog.log_info("%s" % request.user,"Info",'访问URL:%s' % request.get_raw_uri())
     model_name = 'warranty'
     for app_name in site.registered_admins:
         admin_class = site.registered_admins[app_name][model_name]
@@ -380,7 +383,9 @@ def warranty(request,no_render=False):
             return locals()
         return render(request, 'warranty/warranty.html', locals())
 
+@login_required
 def protocol(request,no_render=False):
+    savelog.log_info("%s" % request.user, "Info",'访问URL:%s' % request.get_raw_uri())
     model_name = 'protocol'
     for app_name in site.registered_admins:
         admin_class = site.registered_admins[app_name][model_name]
@@ -403,13 +408,13 @@ def protocol(request,no_render=False):
                 querysets = paginator.page(1)
             except EmptyPage:
                 querysets = paginator.page(paginator.num_pages)
-
         if no_render:
             return locals()
         return render(request, 'gloab-form/list_form.html', locals())
 
-
+@login_required
 def cpu(request,no_render=False):
+    savelog.log_info("%s" % request.user, "Info",'访问URL:%s' % request.get_raw_uri())
     model_name = 'cpu'
     for app_name in site.registered_admins:
         admin_class = site.registered_admins[app_name][model_name]
@@ -432,12 +437,13 @@ def cpu(request,no_render=False):
                 querysets = paginator.page(1)
             except EmptyPage:
                 querysets = paginator.page(paginator.num_pages)
-
         if no_render:
             return locals()
         return render(request, 'gloab-form/list_form.html', locals())
 
+@login_required
 def disk(request,no_render=False):
+    savelog.log_info("%s" % request.user, "Info",'访问URL:%s' % request.get_raw_uri())
     model_name = 'disk'
     for app_name in site.registered_admins:
         admin_class = site.registered_admins[app_name][model_name]
@@ -460,12 +466,13 @@ def disk(request,no_render=False):
                 querysets = paginator.page(1)
             except EmptyPage:
                 querysets = paginator.page(paginator.num_pages)
-
         if no_render:
             return locals()
         return render(request, 'gloab-form/list_form.html', locals())
 
+@login_required
 def ram(request,no_render=False):
+    savelog.log_info("%s" % request.user, "Info",'访问URL:%s' % request.get_raw_uri())
     model_name = 'ram'
     for app_name in site.registered_admins:
         admin_class = site.registered_admins[app_name][model_name]
@@ -474,7 +481,7 @@ def ram(request,no_render=False):
             form_obj = form(data=request.POST)
             if form_obj.is_valid():
                 form_obj.save()
-                return redirect("/asset/ram/")
+                return redirect(request.path)
         elif request.method == 'GET':
             form_obj = form()
             querysets, filter_conditions = get_filter_objs(request, admin_class)
@@ -493,7 +500,9 @@ def ram(request,no_render=False):
             return locals()
         return render(request, 'gloab-form/list_form.html', locals())
 
+@login_required
 def nic(request,no_render=False):
+    savelog.log_info("%s" % request.user, "Info",'访问URL:%s' % request.get_raw_uri())
     model_name = 'nic'
     for app_name in site.registered_admins:
         admin_class = site.registered_admins[app_name][model_name]
@@ -502,7 +511,7 @@ def nic(request,no_render=False):
             form_obj = form(data=request.POST)
             if form_obj.is_valid():
                 form_obj.save()
-                return redirect("/asset/nic/")
+                return redirect(request.path)
         elif request.method == 'GET':
             form_obj = form()
             querysets, filter_conditions = get_filter_objs(request, admin_class)
@@ -521,20 +530,50 @@ def nic(request,no_render=False):
             return locals()
         return render(request, 'gloab-form/list_form.html', locals())
 
+def bonding(request,no_render=False):
+    savelog.log_info("%s" % request.user, "Info", '访问URL:%s' % request.get_raw_uri())
+    model_name = 'bonding'
+    for app_name in site.registered_admins:
+        admin_class = site.registered_admins[app_name][model_name]
+        form = forms.create_dynamic_modelform(admin_class.model)
+        form_obj = form()
+        querysets, filter_conditions = get_filter_objs(request, admin_class)
+        querysets, q_val = get_search_objs(request, querysets, admin_class)
+        querysets, new_order_key, order_column, last_orderby_key = get_orderby_objs(request, querysets)
+        paginator = Paginator(querysets, admin_class.list_per_page)  # Show 25 contacts per page
+        page = request.GET.get('_page')
+        try:
+            querysets = paginator.page(page)
+        except PageNotAnInteger:
+            querysets = paginator.page(1)
+        except EmptyPage:
+            querysets = paginator.page(paginator.num_pages)
+
+    if no_render:
+        return locals()
+    return render(request, 'gloab-form/list_form.html', locals())
+
+
+@login_required
 @csrf_exempt
 def uploadfile(request,app_name,model_name):
-
+    savelog.log_info("%s" % request.user, "Info",'访问URL:%s' % request.get_raw_uri())
     if request.method == 'POST':
         admin_class = site.registered_admins[app_name][model_name]
         filename = request.FILES.get('upfile')
+        savelog.log_info("%s" % request.user, 'Info','导入配置文件:%s' %filename)
         filepath = fileFunc.writefile(filename,model_name)
+        savelog.log_info("%s" % request.user, 'Info','写入本地文件:%s' %filepath)
         try:
-            fileFunc.import_funct(filepath, model_name, admin_class)
+            fileFunc.import_funct(request,filepath, model_name, admin_class)
+            savelog.log_info("%s" % request.user, "Success",'成功导入配置文件:%s' %filepath)
             return redirect('/asset/%s/'%model_name)
         except AttributeError as e:
-            print('err',e)
-            return False
+            savelog.log_info("%s" % request.user, "Error",'导入配置文件失败:%s' %e)
+            pass
+            return redirect('/asset/%s/' % model_name)
 
+@login_required
 @csrf_exempt
 def downloadfile(request,app_name,model_name):
     admin_class = site.registered_admins[app_name][model_name]
@@ -542,6 +581,36 @@ def downloadfile(request,app_name,model_name):
     response = FileResponse(open(downfile,'rb'))
     response['Content-Type'] = 'application/octet-stream'
     response['Content=Disposition'] = 'application;filename="%s.xls"' %model_name
+    savelog.log_info("%s" % request.user, "Success",'下载配置文件模板:%s' %downfile)
     return response
 
+@login_required
+@csrf_exempt
+def logs(request,no_render=False):
+    model_name = 'logs'
+    for app_name in site.registered_admins:
+        admin_class = site.registered_admins[app_name][model_name]
+        obj = admin_class.model.objects.all()
+        if request.method == 'POST':
+            date = request.GET.get('day')
+            user = request.GET.get('user')
+            action = request.GET.get('action')
+            loginfo = readlog.read_log(admin_class=admin_class,date=date,user=user,action=action)
+            return HttpResponse(loginfo)
 
+        elif request.method == 'GET':
+            querysets, filter_conditions = get_filter_objs(request, admin_class)
+            querysets, q_val = get_search_objs(request, querysets, admin_class)
+            querysets, new_order_key, order_column, last_orderby_key = get_orderby_objs(request, querysets)
+            paginator = Paginator(querysets, admin_class.list_per_page)  # Show 25 contacts per page
+            page = request.GET.get('_page')
+            try:
+                querysets = paginator.page(page)
+            except PageNotAnInteger:
+                querysets = paginator.page(1)
+            except EmptyPage:
+                querysets = paginator.page(paginator.num_pages)
+
+            if no_render:
+                return locals()
+            return render(request, 'systems/logs.html', locals())

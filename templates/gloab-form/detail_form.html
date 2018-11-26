@@ -53,6 +53,14 @@
                                         <th class="text-center">IP地址</th>
                                         <th class="text-center">端口范围</th>
                                         <th class="text-center">设备</th>
+                                    {% elif model_name == 'bonding' %}
+                                        <th class="text-center">网卡</th>
+                                        <th class="text-center">设备</th>
+                                        <th class="text-center">模式</th>
+                                        <th class="text-center">IP1</th>
+                                        <th class="text-center">IP2</th>
+                                        <th class="text-center">IP3</th>
+                                        <th class="text-center">IP4</th>
                                     {% endif %}
                                 </tr>
 
@@ -69,6 +77,8 @@
                                         {% build_servers_info obj obj_id %}
                                     {% elif model_name == 'protocol' %}
                                         {% build_protocol_info obj obj_id %}
+                                    {% elif model_name == 'bonding' %}
+                                        {% build_bonding_info obj obj_id %}
                                     {% endif %}
                                 </div>
                             </tbody>

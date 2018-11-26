@@ -4,3 +4,4 @@ psycopg2-binary
 xlwt
 xlrd
 djangorestframework
+django-json-field

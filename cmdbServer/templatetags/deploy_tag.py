@@ -17,6 +17,7 @@ def build_idc_info(admin_class,obj_id):
 
 @register.simple_tag
 def build_project_verbose_name(admin_class):
+    print('admin_class',admin_class)
     return admin_class.model._meta.verbose_name
 
 @register.simple_tag
@@ -141,7 +142,8 @@ def build_device_info(obj,obj_id):
 def build_servers_info(obj,obj_id):
     objects = obj.filter(id=obj_id).values("hostname", "ipaddress", "cpus__kernel", "cpus__counts","rams__size","disks__size",
                                            "nics__ipaddress", "nics__protocol__number","nics__protocol__device__name",
-                                           "nics__protocol__device__id")
+                                           "nics__bonding__ipaddress1","nics__bonding__ipaddress2","nics__bonding__ipaddress3",
+                                           "nics__bonding__ipaddress4","nics__protocol__device__id")
     size = 0
     for disk in objects:
         if disk['disks__size']:
@@ -159,7 +161,18 @@ def build_servers_info(obj,obj_id):
         ele_td += "<td style='text-align: center'>%s</td>" % info['cpus__counts']
         ele_td += "<td style='text-align: center'>%sG</td>" % info['rams__size']
         ele_td += "<td style='text-align: center'>%sG</td>" % size
-        ele_td += "<td style='text-align: center'>%s</td>" % info['nics__ipaddress']
+        if info["nics__ipaddress"]:
+            ele_td += "<td style='text-align: center'>%s</td>" % info['nics__ipaddress']
+        elif info['nics__bonding__ipaddress1']:
+            ele_td += "<td style='text-align: center'>%s</td>" % info['nics__bonding__ipaddress1']
+        elif info['nics__bonding__ipaddress2']:
+            ele_td += "<td style='text-align: center'>%s</td>" % info['nics__bonding__ipaddress2']
+        elif info['nics__bonding__ipaddress3']:
+            ele_td += "<td style='text-align: center'>%s</td>" % info['nics__bonding__ipaddress3']
+        elif info['nics__bonding__ipaddress4']:
+            ele_td += "<td style='text-align: center'>%s</td>" % info['nics__bonding__ipaddress4']
+        else:
+            ele_td += "<td style='text-align: center'>%s</td>" % info['nics__ipaddress']
         ele_td += "<td style='text-align: center'>%s</td>" % info['nics__protocol__number']
         ele_td += "<td style='text-align: center'><a href='/asset/cmdbServer/device/detail/?id=%s'>%s</a></td>" %(info['nics__protocol__device__id'],info['nics__protocol__device__name'])
 
@@ -182,3 +195,80 @@ def build_protocol_info(obj,obj_id):
         ele_tr += ele_td + "</tr>"
         ele += ele_tr
     return mark_safe(ele)
+
+@register.simple_tag
+def build_bonding_info(obj,obj_id):
+    objects = obj.filter(device=obj_id).values("nic__sn","model","ipaddress1","ipaddress2","ipaddress3","ipaddress4",)
+    ele = ""
+    model = {0: 'Round-robin policy(平衡抡循环策略', 1: 'Active-backup policy(主-备份策略)', 2: 'XOR policy(平衡策略)',
+            3: 'broadcast(广播策略)', 4: 'Dynamic link aggregation(IEEE802.3ad 动态链接聚合)', 5: 'Adaptive transmit load balancing(适配器传输负载均衡)',
+            6: 'Adaptive load balancing(适配器适应性负载均衡)'}
+
+    for info in objects:
+        ele_tr = "<tr>"
+        ele_td = "<td style='text-align: center'>%s</td>" % info['nic__sn']
+        ele_td += "<td style='text-align: center'>%s</td>" %obj_id
+        ele_td += "<td style='text-align: center'>%s</td>" % model[info['model']]
+        ele_td += "<td style='text-align: center'>%s</td>" % info['ipaddress1']
+        ele_td += "<td style='text-align: center'>%s</td>" % info['ipaddress2']
+        ele_td += "<td style='text-align: center'>%s</td>" % info['ipaddress3']
+        ele_td += "<td style='text-align: center'>%s</td>" % info['ipaddress4']
+        ele_tr += ele_td + "</tr>"
+        ele += ele_tr
+    return mark_safe(ele)
+
+
+
+import json
+@register.simple_tag
+def build_logs_info(obj):
+    ele = ""
+    for content in obj.values():
+        ele_tr = "<tr>"
+        ele_td = "<td>%s</td>" %content["date"].strftime("%Y-%m-%d %H:%M:%S")
+        ele_td += "<td>%s</td>" %content["user"]
+        ele_td += "<td>%s</td>" %content["action"]
+        ele_td += "<td>%s</td>" %content["content"]
+        ele_tr += ele_td
+        ele_tr += "</tr>"
+        ele += ele_tr
+    return mark_safe(ele)
+
+@register.simple_tag
+def build_option_user(obj):
+    ele = ""
+    for user in obj.values('user').distinct():
+        ele_option = "<option label='%s' value='%s'></option>" %(user['user'],user['user'])
+        ele += ele_option
+    return mark_safe(ele)
+
+@register.simple_tag
+def build_option_action(obj):
+    ele = ""
+    for user in obj.values('action').distinct():
+        ele_option = "<option label='%s' value='%s'></option>" %(user['action'],user['action'])
+        ele += ele_option
+    return mark_safe(ele)
+
+@register.simple_tag
+def build_nic_bonding(row,admin_class):
+    ele = ""
+    obj = admin_class.model.objects.filter(sn=row.sn).values('bonding__device',"bonding__device")
+    for i in obj:
+        ele += "<a href='/asset/cmdbServer/bonding/detail/?device=%s'>%s</a>" %(i['bonding__device'],i['bonding__device'])
+    return mark_safe(ele)
+
+
+@register.simple_tag
+def build_bonding_nic(admin_class):
+    obj = admin_class.model.objects.values("nic__sn")
+    ele = ""
+    for sn in obj:
+        if sn['nic__sn']:
+            ele += sn['nic__sn']
+    return  mark_safe(ele)
+
+@register.simple_tag
+def get_abs_value(loop_num , curent_page_number):
+    """返回当前页与循环loopnum的差的绝对值"""
+    return abs(loop_num - curent_page_number)

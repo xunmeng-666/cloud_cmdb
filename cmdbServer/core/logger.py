@@ -15,14 +15,14 @@ class Loger(object):
         self.log_info = os.path.join(log_path,'info.log')
         self.log_error = os.path.join(log_path,'error.log')
 
-    def logger_info(self,LOG_INFO,LOG_LEVEL,log_type):
+    def logger_info(self,LOG_INFO,LOG_LEVEL='INFO',log_type=None):
         logger = logging.getLogger(log_type)
         logger.setLevel(LOG_LEVEL)
         ch = logging.StreamHandler()
-        fh = handlers.RotatingFileHandler(self.log_info, maxBytes=4, backupCount=2)
+        fh = logging.FileHandler(filename=self.log_info,mode='a',)
         fh.setLevel(LOG_LEVEL)
         ch.setLevel(LOG_LEVEL)
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        formatter = logging.Formatter('%(message)s')
         ch.setFormatter(formatter)
         fh.setFormatter(formatter)
         logger.addHandler(ch)
@@ -33,14 +33,14 @@ class Loger(object):
         return logger
 
 
-    def logger_warning(self,LOG_INFO,LOG_LEVEL,log_type):
+    def logger_warning(self,LOG_INFO,LOG_LEVEL='WARNING',log_type=None):
         logger = logging.getLogger(log_type)
         logger.setLevel(LOG_LEVEL)
         ch = logging.StreamHandler()
-        fh = handlers.RotatingFileHandler(self.log_info, maxBytes=4, backupCount=2)
+        fh = logging.FileHandler(filename=self.log_info,mode='a',)
         fh.setLevel(LOG_LEVEL)
         ch.setLevel(LOG_LEVEL)
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        formatter = logging.Formatter('%(message)s')
         ch.setFormatter(formatter)
         fh.setFormatter(formatter)
         logger.addHandler(ch)
@@ -50,14 +50,14 @@ class Loger(object):
         logger.removeHandler(fh)
         return logger
 
-    def logger_error(self,LOG_INFO,LOG_LEVEL,log_type):
+    def logger_error(self,LOG_INFO,LOG_LEVEL='ERROR',log_type=None):
         logger = logging.getLogger(log_type)
         logger.setLevel(LOG_LEVEL)
         ch = logging.StreamHandler()
-        fh = handlers.RotatingFileHandler(self.log_error, maxBytes=4, backupCount=2)
+        fh = logging.FileHandler(filename=self.log_error,mode='a',)
         fh.setLevel(LOG_LEVEL)
         ch.setLevel(LOG_LEVEL)
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        formatter = logging.Formatter('%(message)s')
         ch.setFormatter(formatter)
         fh.setFormatter(formatter)
         logger.addHandler(ch)

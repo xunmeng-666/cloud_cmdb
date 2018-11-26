@@ -1,8 +1,9 @@
 from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator,MaxLengthValidator
-from django.contrib.postgres.fields import ArrayField
-from django.core.exceptions import ValidationError
-from django.utils.translation import ugettext_lazy as _
+from django.contrib.postgres.fields import JSONField
+from django.contrib.auth.models import User
+from cmdbServer.core.model_func import savelog
+
 # Create your models here.
 
 
@@ -146,8 +147,8 @@ class Device(models.Model):
             if not self.id:
                 super(self.__class__, self).save(*args, **kwargs)
                 Cabint.objects.filter(id=self.cabint_id).update(useposition=useposition)
-                return True
             super(self.__class__, self).save(*args, **kwargs)
+
         return MaxLengthValidator(cabint_size)
 
     def delete(self, using=None, keep_parents=False):
@@ -155,6 +156,7 @@ class Device(models.Model):
         useposition = int(objects['useposition']) - int(self.company.height)
         if useposition < 0: useposition = 0
         Cabint.objects.filter(id=self.cabint_id).update(useposition=useposition)
+
         super(self.__class__, self).delete()
 
     def __str__(self):
@@ -168,6 +170,29 @@ class Device(models.Model):
     def company_name(self):
         return "%s,%s" % (self.company.name, self.company.model)
 
+class Protocol(models.Model):
+    protocols = (
+        (0,'VLAN'),
+        (1,'TRUNK'),
+        (2,'RIP'),
+        (3,'OSPF'),
+        (4,'IBGP'),
+        (5,'EBGP'),
+        (6,'BIND'),
+    )
+    name = models.SmallIntegerField(verbose_name='协议类型',choices=protocols,default=0,)
+    number = models.CharField(verbose_name='协议号',max_length=8,default='VLAN1')
+    ipaddress = models.GenericIPAddressField(verbose_name='协议IP',blank=True,null=True)
+    port_range = models.CharField(verbose_name='端口范围',max_length=8,default='1-4',)
+    device = models.ForeignKey(Device,related_name='protocols',on_delete=models.CASCADE,blank=True,null=True)
+
+    class Meta:
+        verbose_name = '协议'
+        verbose_name_plural = '协议'
+
+    def __str__(self):
+        return "%s,%s" %(self.device,self.number,)
+
 class Servers(models.Model):
     servers_type = (
         (0, '机架'),
@@ -179,11 +204,11 @@ class Servers(models.Model):
     company = models.ForeignKey(Company,verbose_name='型号',related_name='servers', on_delete=models.CASCADE,blank=True,null=True,)
     types = models.SmallIntegerField(verbose_name='服务器类型', choices=servers_type,default=0,)
     cabint = models.ForeignKey(Cabint,verbose_name='机柜',related_name='servers',on_delete=models.CASCADE,blank=True,null=True)
-    position = models.IntegerField(verbose_name='机柜位置',blank=True,null=True,unique=True,validators=[MaxValueValidator(42),
+    position = models.IntegerField(verbose_name='机柜位置',blank=True,null=True,validators=[MaxValueValidator(42),
                                                MinValueValidator(1)])
     hostname = models.CharField(verbose_name='主机名', max_length=64, unique=True)
     ipaddress = models.GenericIPAddressField(verbose_name='管理地址',unique=True)
-    vlan = models.ForeignKey('Protocol',verbose_name='管理VLAN',blank=True,null=True,related_name='servers', on_delete=models.CASCADE)
+    vlan = models.ForeignKey(Protocol,verbose_name='管理VLAN',blank=True,related_name='servers', on_delete=models.CASCADE)
     system = models.CharField(verbose_name='操作系统', max_length=32, blank=True, null=True)
     version = models.CharField(verbose_name='系统版本号', max_length=32, blank=True, null=True)
     status = models.SmallIntegerField(verbose_name='主机状态',choices=device_status,default=0)
@@ -198,6 +223,7 @@ class Servers(models.Model):
     class Meta:
         verbose_name = '服务器'
         verbose_name_plural = '服务器'
+        unique_together = "cabint","position"
 
     def save(self, *args, **kwargs):
         objects = Cabint.objects.filter(id=self.cabint_id).values('useposition','size')[0]
@@ -214,8 +240,8 @@ class Servers(models.Model):
             if not self.id:
                 super(self.__class__, self).save(*args, **kwargs)
                 Cabint.objects.filter(id=self.cabint_id).update(useposition=useposition)
-                return True
             super(self.__class__, self).save(*args, **kwargs)
+
         return MaxLengthValidator(cabint_size)
 
     def delete(self, using=None, keep_parents=False):
@@ -237,27 +263,6 @@ class Servers(models.Model):
     def company_name(self):
         return "%s,%s"%(self.company.name,self.company.model)
 
-class Protocol(models.Model):
-    protocols = (
-        (0,'VLAN'),
-        (1,'TRUNK'),
-        (2,'RIP'),
-        (3,'OSPF'),
-        (4,'IBGP'),
-        (5,'EBGP'),
-    )
-    name = models.SmallIntegerField(verbose_name='协议类型',choices=protocols,default=0,)
-    number = models.CharField(verbose_name='协议号',max_length=8,default='VLAN1')
-    ipaddress = models.GenericIPAddressField(verbose_name='协议IP',blank=True,null=True)
-    port_range = models.CharField(verbose_name='端口范围',max_length=8,default='1-4',)
-    device = models.ForeignKey(Device,related_name='protocols',on_delete=models.CASCADE,blank=True,null=True)
-
-    class Meta:
-        verbose_name = '协议'
-        verbose_name_plural = '协议'
-
-    def __str__(self):
-        return "%s,%s" %(self.device,self.number,)
 
 class Nic(models.Model):
     choice_speed = (
@@ -290,11 +295,12 @@ class Nic(models.Model):
         verbose_name_plural = '网卡'
 
     def __str__(self):
-        return "%s,%s,%s" % (self.get_types_display(),self.ipaddress,self.get_speed_display(),)
+        return "%s,%s,%s" % (self.sn,self.ipaddress,self.get_speed_display(),)
 
     @property
     def company_name(self):
         return "%s,%s" % (self.company.name, self.company.model)
+
 
 class Ram(models.Model):
     company = models.ForeignKey(Company,verbose_name='型号',related_name='rams',on_delete=models.CASCADE)
@@ -332,6 +338,7 @@ class Disk(models.Model):
     company = models.ForeignKey(Company,verbose_name='型号',related_name='disks',on_delete=models.CASCADE)
     types = models.SmallIntegerField(choices=disk_types,verbose_name='磁盘类型',default=0,blank=True,null=True)
     size = models.CharField(verbose_name='磁盘容量',max_length=32)
+    count = models.IntegerField(verbose_name='磁盘数量',blank=True,null=True)
     server = models.ForeignKey(Servers,related_name='disks',on_delete=models.CASCADE,blank=True,null=True)
     status = models.SmallIntegerField(verbose_name='状态',choices=disk_status,default=0,)
     remarks = models.CharField(verbose_name='备注', max_length=200, blank=True, null=True)
@@ -364,4 +371,40 @@ class CPU(models.Model):
     @property
     def company_name(self):
         return "%s,%s" % (self.company.name, self.company.model)
+
+class Bonding(models.Model):
+    bonding_model= (
+        (0,"Round-robin policy(平衡抡循环策略"),
+        (1,"Active-backup policy(主-备份策略)"),
+        (2,"XOR policy(平衡策略)"),
+        (3,"broadcast(广播策略)"),
+        (4,"Dynamic link aggregation(IEEE802.3ad 动态链接聚合)"),
+        (5,"Adaptive transmit load balancing(适配器传输负载均衡)"),
+        (6,"Adaptive load balancing(适配器适应性负载均衡)"),
+    )
+    nic = models.ManyToManyField(Nic,verbose_name='网卡',related_name='bonding',)
+    device = models.CharField(verbose_name='设备',max_length=16,blank=True,null=True)
+    model = models.SmallIntegerField(choices=bonding_model,verbose_name='Bonding模式',default=0)
+    ipaddress1 = models.GenericIPAddressField(verbose_name='IP地址1',blank=True,null=True)
+    ipaddress2 = models.GenericIPAddressField(verbose_name='IP地址2',blank=True,null=True)
+    ipaddress3 = models.GenericIPAddressField(verbose_name='IP地址3',blank=True,null=True)
+    ipaddress4 = models.GenericIPAddressField(verbose_name='IP地址4',blank=True,null=True)
+
+    class Meta:
+        verbose_name = 'Bonding'
+        verbose_name_plural = verbose_name
+        unique_together = ('ipaddress1','ipaddress2','ipaddress3','ipaddress4')
+
+    def __str__(self):
+        return "%s,%s" %(self.device,self.get_model_display())
+
+class Logs(models.Model):
+    user = models.CharField(max_length=32)
+    action = models.CharField(max_length=32,)
+    content = JSONField()
+    date = models.DateTimeField(auto_now_add=False)
+
+    class Meta:
+        verbose_name = '日志'
+        verbose_name_plural = verbose_name
 

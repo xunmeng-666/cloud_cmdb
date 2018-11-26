@@ -41,7 +41,7 @@ class ProtocolAdmin(BaseAdmin):
 
 class NicAdmin(BaseAdmin):
     list_display = ("id",'sn','company','ipaddress','model','mac_address','types','protocol','speed','server','remarks')
-    list_filter = ["ID",'SN',"型号",'IP地址','IP地址获取方式','MAC地址','所属设备','VLAN','速率','服务器','备注']
+    list_filter = ["ID",'SN',"型号",'IP地址','IP地址获取方式','MAC地址','所属设备','VLAN','速率',"Bonding",'服务器','备注']
     export_fields = list_display
     list_per_page = 10
     search_fields = ['sn','company__name','ipaddress','speed','server__hostname']
@@ -54,8 +54,8 @@ class RamAdmin(BaseAdmin):
     search_fields = ['company__name', 'size','server__hostname']
 
 class DiskAdmin(BaseAdmin):
-    list_display = ("id","sn",'company', 'types', 'size', 'server','status','remarks')
-    list_filter = ["ID","SN","型号", '磁盘类型', '磁盘容量','服务器','状态','备注']
+    list_display = ("id","sn",'company', 'types', 'size','count', 'server','status','remarks')
+    list_filter = ["ID","SN","型号", '磁盘类型', '磁盘容量','磁盘数量','服务器','状态','备注']
     export_fields = list_display
     list_per_page = 10
     search_fields = ['sn','company__name', 'types', 'size', 'server__hostname','status']
@@ -83,12 +83,23 @@ class ServersAdmin(BaseAdmin):
     list_per_page = 10
     search_fields = ["sn","cabint__number",'hostname','ipaddress',"group__name","status"]
 
+class BondingAdmin(BaseAdmin):
+    list_display = ("id","nic","device","model","ipaddress1","ipaddress2","ipaddress3","ipaddress4")
+    list_filter = ["ID",'网卡',"设备","模式","IP1","IP2","IP3",'IP4']
+    search_fields = ["nic","device","model","ipaddress1","ipaddress2","ipaddress3","ipaddress4"]
+
+
 class WarrantyAdmin(BaseAdmin):
     list_display = ('company',"start_date",'end_date')
     list_filter = ['质保商','质保开始时间','质保结束时间']
     export_fields = ('id','company',"start_date",'end_date')
     list_per_page = 10
     search_fields = list_display
+
+class LogsAdmin(BaseAdmin):
+    list_display = ('date', "user", 'action','content')
+    list_filter = ['日期', '用户', '行为','内容']
+    list_per_page = 20
 
 
 site.register(models.IDC,IdcInfoAdmin)
@@ -103,3 +114,5 @@ site.register(models.CPU,CPUAdmin)
 site.register(models.Device,DevicesAdmin)
 site.register(models.Servers,ServersAdmin)
 site.register(models.Warranty,WarrantyAdmin)
+site.register(models.Bonding,BondingAdmin)
+site.register(models.Logs,LogsAdmin)

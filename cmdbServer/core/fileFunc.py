@@ -1,19 +1,32 @@
 # -*- coding:utf-8-*-
 from config.config import *
+from cmdbServer.core.model_func import savelog
+from django.db.utils import IntegrityError
 import xlrd
 import xlwt
 import os
 import datetime
 
 class FileFunc(object):
-    def _device_id(self,admin_class,field):
+    def _idc_id(self,admin_class,field):
         if type(field) is int:
+            return field
+        print('idcA',admin_class,'field',field)
+        print('idc',admin_class.model.idc.get_queryset().filter(name=field).values('id')[0]['id'])
+
+        return admin_class.model.idc.get_queryset().filter(name=field).values('id')[0]['id']
+
+    def _device_id(self,admin_class,field):
+        if not field:
+            return None
+        elif type(field) is int:
             return field
         return admin_class.model.device.get_queryset().filter(name=field).values('id')[0]['id']
 
     def _company_id(self,admin_class,field):
         if type(field) is int:
             return field
+        print('field',field)
         return admin_class.model.company.get_queryset().filter(name=field).values('id')[0]['id']
 
     def _group_id(self,admin_class,field):
@@ -37,14 +50,30 @@ class FileFunc(object):
         return admin_class.model.warranty.get_queryset().filter(end_date=fields).values('id')[0]['id']
 
     def _server_id(self,admin_class,field):
+        print('server_id',field)
         if type(field) is int:
-            return field
+            if int(admin_class.model.server.get_queryset().values('id')[0]['id'])==field:
+                return field
+        print('id!=field',admin_class.model.server.get_queryset().filter(hostname=field).values('id')[0]['id'])
         return admin_class.model.server.get_queryset().filter(hostname=field).values('id')[0]['id']
 
     def _protocol_id(self,admin_class,field):
-        if type(field) is int:
-            return field
+        if not field:
+            return None
+        elif type(field) is int:
+            print('filed is int')
+            if int(admin_class.model.protocol.get_queryset().values('id')[0]['id'])==field:
+                return field
+
         return admin_class.model.protocol.get_queryset().filter(number=field).values('id')[0]['id']
+
+    def _vlan_id(self,admin_class,field):
+        if type(field) is int:
+            print('filed is int')
+            if int(admin_class.model.vlan.get_queryset().values('id')[0]['id'])==field:
+                return field
+            print('id!=field')
+        return admin_class.model.vlan.get_queryset().filter(number=field).values('id')[0]['id']
 
     def export_file(self,model_name,admin_class):
         '''
@@ -74,7 +103,7 @@ class FileFunc(object):
         ws.save(export_file)
         return export_file
 
-    def import_idc_file(self,filename,model_name,admin_class):
+    def import_idc_file(self,request,filename,model_name,admin_class):
         data = xlrd.open_workbook(filename)
         table = data.sheet_by_name(model_name)
         nrows = table.nrows
@@ -104,7 +133,8 @@ class FileFunc(object):
             pass
         return import_status
 
-    def import_cabint_file(self,filename,model_name,admin_class):
+    def import_cabint_file(self,request,filename,model_name,admin_class):
+        print('cabint',model_name)
         data = xlrd.open_workbook(filename)
         table = data.sheet_by_name(model_name)
         nrows = table.nrows
@@ -117,23 +147,25 @@ class FileFunc(object):
                 if type(row[j]) == float:
                     row[j] = int(row[j])
             if row:
+                idc_id = self._idc_id(admin_class, row[4])
                 if admin_class.model.objects.filter(number=row[1]).exists():
                     x = x + 1
                 else:
                     y += 1
                     WorkList.append(
                         admin_class.model(id=row[0], number=row[1], size=row[2], room_number=row[3],
-                                          idc_id=row[4]))
+                                          idc_id=idc_id))
             else:
                 z += 1
         import_status = {'seccuss':y,'skip':x,'error':z}
         try:
+            print('work',WorkList)
             admin_class.model.objects.bulk_create(WorkList)
         except AttributeError as e:
-            pass
+            savelog.log_info("%s" % request.user, "Error", '导入配置文件失败:%s' %e)
         return import_status
 
-    def import_company_file(self,filename,model_name,admin_class):
+    def import_company_file(self,request,filename,model_name,admin_class):
         data = xlrd.open_workbook(filename)
         table = data.sheet_by_name(model_name)
         nrows = table.nrows
@@ -155,11 +187,13 @@ class FileFunc(object):
             else:
                 z += 1
         import_status = {'seccuss': y, 'skip': x, 'error': z}
-        print('work',WorkList)
-        admin_class.model.objects.bulk_create(WorkList)
+        try:
+            admin_class.model.objects.bulk_create(WorkList)
+        except AttributeError as e:
+            savelog.log_info("%s" % request.user, "Error", '导入配置文件失败:%s' % e)
         return import_status
 
-    def import_protocol_file(self,filename,model_name,admin_class):
+    def import_protocol_file(self,request,filename,model_name,admin_class):
         data = xlrd.open_workbook(filename)
         table = data.sheet_by_name(model_name)
         nrows = table.nrows
@@ -172,20 +206,25 @@ class FileFunc(object):
                 if type(row[j]) == float:
                     row[j] = int(row[j])
             if row:
+
                 device_id = self._device_id(admin_class,row[5])
-                if admin_class.model.objects.filter(id=row[0]).exists():
+                if admin_class.model.objects.filter(number=row[2]).exists():
                     x = x + 1
                 else:
                     y += 1
+
                     WorkList.append(
                         admin_class.model(id=row[0], name=row[1],number=row[2],ipaddress=row[3],port_range=row[4],device_id=device_id))
             else:
                 z += 1
         import_status = {'seccuss':y,'skip':x,'error':z}
-        admin_class.model.objects.bulk_create(WorkList)
+        try:
+            admin_class.model.objects.bulk_create(WorkList)
+        except AttributeError as e:
+            savelog.log_info("%s" % request.user, "Error", '导入配置文件失败:%s' % e)
         return import_status
 
-    def import_nic_file(self,filename,model_name,admin_class):
+    def import_nic_file(self,request,filename,model_name,admin_class):
         data = xlrd.open_workbook(filename)
         table = data.sheet_by_name(model_name)
         nrows = table.nrows
@@ -211,10 +250,14 @@ class FileFunc(object):
             else:
                 z += 1
         import_status = {'seccuss':y,'skip':x,'error':z}
-        admin_class.model.objects.bulk_create(WorkList)
+        try:
+            print('ram',WorkList)
+            admin_class.model.objects.bulk_create(WorkList)
+        except AttributeError as e:
+            savelog.log_info("%s" % request.user, "Error", '导入配置文件失败:%s' % e)
         return import_status
 
-    def import_ram_file(self,filename,model_name,admin_class):
+    def import_ram_file(self,request,filename,model_name,admin_class):
         data = xlrd.open_workbook(filename)
         table = data.sheet_by_name(model_name)
         nrows = table.nrows
@@ -238,10 +281,14 @@ class FileFunc(object):
             else:
                 z += 1
         import_status = {'seccuss':y,'skip':x,'error':z}
-        admin_class.model.objects.bulk_create(WorkList)
+        try:
+            print('ram', WorkList)
+            admin_class.model.objects.bulk_create(WorkList)
+        except AttributeError as e:
+            savelog.log_info("%s" % request.user, "Error", '导入配置文件失败:%s' % e)
         return import_status
 
-    def import_disk_file(self,filename,model_name,admin_class):
+    def import_disk_file(self,request,filename,model_name,admin_class):
         data = xlrd.open_workbook(filename)
         table = data.sheet_by_name(model_name)
         nrows = table.nrows
@@ -255,22 +302,30 @@ class FileFunc(object):
                     row[j] = int(row[j])
             if row:
                 company_id = self._company_id(admin_class, row[2])
-                server_id = self._server_id(admin_class, row[5])
-                if admin_class.model.objects.filter(id=row[0]).exists():
+                server_id = self._server_id(admin_class, row[6])
+                if admin_class.model.objects.filter(sn=row[1]).exists():
                     x = x + 1
                 else:
                     y += 1
-
+                    print('server_id',server_id)
                     WorkList.append(
-                        admin_class.model(id=row[0], sn=row[1],company_id=company_id,types=row[3],size=row[4],server_id=server_id,
-                                          status=row[6],remarks=row[7]))
+                        admin_class.model(id=row[0], sn=row[1],company_id=company_id,types=row[3],size=row[4],count=row[5],
+                                          server_id=server_id,status=row[7],remarks=row[8]))
             else:
                 z += 1
         import_status = {'seccuss':y,'skip':x,'error':z}
-        admin_class.model.objects.bulk_create(WorkList)
+        try:
+            print('work',WorkList)
+            admin_class.model.objects.bulk_create(WorkList)
+        except AttributeError as e:
+            savelog.log_info("%s" % request.user, "Error", '导入配置文件失败:%s' % e)
+        except ValueError as e:
+            savelog.log_info("%s" % request.user, "Error", '导入配置文件失败:%s' % e)
+        except IntegrityError as e:
+            savelog.log_info("%s" % request.user, "Error", '导入配置文件失败:%s' % e)
         return import_status
 
-    def import_cpu_file(self,filename,model_name,admin_class):
+    def import_cpu_file(self,request,filename,model_name,admin_class):
         data = xlrd.open_workbook(filename)
         table = data.sheet_by_name(model_name)
         nrows = table.nrows
@@ -295,10 +350,13 @@ class FileFunc(object):
             else:
                 z += 1
         import_status = {'seccuss':y,'skip':x,'error':z}
-        admin_class.model.objects.bulk_create(WorkList)
+        try:
+            admin_class.model.objects.bulk_create(WorkList)
+        except AttributeError as e:
+            savelog.log_info("%s" % request.user, "Error", '导入配置文件失败:%s' % e)
         return import_status
 
-    def import_group_file(self,filename,model_name,admin_class):
+    def import_group_file(self,request,filename,model_name,admin_class):
         data = xlrd.open_workbook(filename)
         table = data.sheet_by_name(model_name)
         nrows = table.nrows
@@ -320,10 +378,13 @@ class FileFunc(object):
             else:
                 z += 1
         import_status = {'seccuss':y,'skip':x,'error':z}
-        admin_class.model.objects.bulk_create(WorkList)
+        try:
+            admin_class.model.objects.bulk_create(WorkList)
+        except AttributeError as e:
+            savelog.log_info("%s" % request.user, "Error", '导入配置文件失败:%s' % e)
         return import_status
 
-    def import_device_file(self,filename,model_name,admin_class):
+    def import_device_file(self,request,filename,model_name,admin_class):
         data = xlrd.open_workbook(filename)
         table = data.sheet_by_name(model_name)
         nrows = table.nrows
@@ -359,12 +420,16 @@ class FileFunc(object):
             else:
                 z += 1
         import_status = {'seccuss':y,'skip':x,'error':z}
-        admin_class.model.objects.bulk_create(WorkList)
-        for position in PositionList:
-            admin_class.model.cabint.get_queryset().filter(id=position['id']).update(useposition=position['useposition'])
+        try:
+            print('device',WorkList)
+            admin_class.model.objects.bulk_create(WorkList)
+            for position in PositionList:
+                admin_class.model.cabint.get_queryset().filter(id=position['id']).update(useposition=position['useposition'])
+        except AttributeError as e:
+            savelog.log_info("%s" % request.user, "Error", '导入配置文件失败:%s' % e)
         return import_status
 
-    def import_servers_file(self,filename,model_name,admin_class):
+    def import_servers_file(self,request,filename,model_name,admin_class):
         data = xlrd.open_workbook(filename)
         table = data.sheet_by_name(model_name)
         nrows = table.nrows
@@ -380,34 +445,46 @@ class FileFunc(object):
                     row[j] = int(row[j])
             if row:
 
-                if admin_class.model.objects.filter(sn=row[1], ipaddress=row[7]).exists():
+                if admin_class.model.objects.filter(ipaddress=row[7]).exists():
                     x = x + 1
                 else:
                     y += 1
-                    company_id = self._company_id(admin_class,row[2])
-                    cabint_id = self._cabint_id(admin_class,row[4])
-                    group_id = self._group_id(admin_class,row[12])
-                    warranty_id = self._warranty_id(admin_class,row[13])
-                    cabint_useposition = int(
-                        admin_class.model.cabint.get_queryset().filter(id=cabint_id).values('useposition')[0]['useposition'])
-                    company_height += int(admin_class.model.company.get_queryset().filter(id=company_id).values('height')[0]['height'])
-                    cabint_useposition += company_height
-                    WorkList.append(
-                        admin_class.model(id=row[0], sn=row[1],company_id=company_id,types=row[3],cabint_id=cabint_id,position=row[5],
-                                          hostname=row[6],ipaddress=row[7],vlan_id=row[8],system=str(row[9]),version=row[10],status=row[11],
-                                          group_id=group_id,warranty_id=warranty_id,userinfo=row[14],contacts=row[15]))
-                    PositionList.append({'id': cabint_id, 'useposition': cabint_useposition})
+                    try:
+                        company_id = self._company_id(admin_class,row[2])
+                        cabint_id = self._cabint_id(admin_class,row[4])
+                        group_id = self._group_id(admin_class,row[12])
+                        warranty_id = self._warranty_id(admin_class,row[13])
+                        vlan_id = self._vlan_id(admin_class,row[8])
+                        cabint_useposition = int(
+                            admin_class.model.cabint.get_queryset().filter(id=cabint_id).values('useposition')[0]['useposition'])
+                        company_height += int(admin_class.model.company.get_queryset().filter(id=company_id).values('height')[0]['height'])
+                        cabint_useposition += company_height
+                        WorkList.append(
+                            admin_class.model(id=row[0], sn=row[1],company_id=company_id,types=row[3],cabint_id=cabint_id,position=row[5],
+                                              hostname=row[6].strip(),ipaddress=row[7],vlan_id=vlan_id,system=str(row[9]),
+                                              version=row[10],status=row[11],group_id=group_id,warranty_id=warranty_id,
+                                              userinfo=row[14],contacts=row[15]))
+                        PositionList.append({'id': cabint_id, 'useposition': cabint_useposition})
+                    except IndexError as e:
+                        print('row',row)
+                        savelog.log_info("%s"%request.user,'Error',"%s" %e)
+                        pass
 
             else:
                 z += 1
         import_status = {'seccuss':y,'skip':x,'error':z}
-        admin_class.model.objects.bulk_create(WorkList)
-        for position in PositionList:
-            admin_class.model.cabint.get_queryset().filter(id=position['id']).update(useposition=position['useposition'])
+
+        try:
+            print('work',WorkList)
+            admin_class.model.objects.bulk_create(WorkList)
+            for position in PositionList:
+                admin_class.model.cabint.get_queryset().filter(id=position['id']).update(useposition=position['useposition'])
+        except AttributeError as e:
+            savelog.log_info("%s" % request.user, "Error", '导入配置文件失败:%s' % e)
         return import_status
 
 
-    def import_warranty_file(self,filename,model_name,admin_class):
+    def import_warranty_file(self,request,filename,model_name,admin_class):
         data = xlrd.open_workbook(filename)
         table = data.sheet_by_name(model_name)
         nrows = table.nrows
@@ -429,10 +506,13 @@ class FileFunc(object):
             else:
                 z += 1
         import_status = {'seccuss':y,'skip':x,'error':z}
-        admin_class.model.objects.bulk_create(WorkList)
+        try:
+            admin_class.model.objects.bulk_create(WorkList)
+        except AttributeError as e:
+            savelog.log_info("%s" % request.user, "Error", '导入配置文件失败:%s' % e)
         return import_status
 
-    def import_funct(self,filename,model_name,admin_class):
+    def import_funct(self,request,filename,model_name,admin_class):
         model_dict = {
             'idc':self.import_idc_file,
             'cabint':self.import_cabint_file,
@@ -448,7 +528,7 @@ class FileFunc(object):
             'warranty':self.import_warranty_file,
         }
         if model_name not in model_dict:return False
-        res = model_dict[model_name](filename=filename,model_name=model_name,admin_class=admin_class)
+        res = model_dict[model_name](request,filename=filename,model_name=model_name,admin_class=admin_class)
         return res
 
     def writefile(self,filename,model_name):

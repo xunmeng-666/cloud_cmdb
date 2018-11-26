@@ -1,5 +1,4 @@
 from django.forms import ModelForm
-from django import forms
 
 def __new__(cls, *args, **kwargs):
 

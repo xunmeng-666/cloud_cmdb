@@ -5,3 +5,4 @@ BASH = os.path.dirname(os.path.dirname(__file__))
 
 export_file = '%s/static/files/download/download.xls' %BASH
 import_file_dir = '%s/static/files/upload/' %BASH
+log_path = "%s/logs"%BASH
