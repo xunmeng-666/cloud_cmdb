@@ -409,22 +409,30 @@ class FileFunc(object):
                     warranty_id = self._warranty_id(admin_class, row[11])
                     cabint_useposition = int(
                         admin_class.model.cabint.get_queryset().filter(id=cabint_id).values('useposition')[0]['useposition'])
-                    company_height += int(
-                        admin_class.model.company.get_queryset().filter(id=company_id).values('height')[0]['height'])
-                    cabint_useposition += company_height
+                    company_height = int(
+                        admin_class.model.company.get_queryset().filter(id=company_id).values("height")[0]['height'])
+                    PositionList.append({'id': cabint_id, 'useposition': cabint_useposition + company_height})
                     WorkList.append(
                         admin_class.model(id=row[0], sn=row[1],name=row[2],types=row[3],company_id=company_id,ipaddress=row[5],
                                           cabint_id=cabint_id,position=row[7],device_statuses=row[8],
                                           group_id=group_id,warranty_id=warranty_id,contacts=row[11],))
-                    PositionList.append({'id': cabint_id, 'useposition': cabint_useposition})
             else:
                 z += 1
         import_status = {'seccuss':y,'skip':x,'error':z}
         try:
             print('device',WorkList)
             admin_class.model.objects.bulk_create(WorkList)
+            _position = {}
+            admin_class.model.objects.bulk_create(WorkList)
             for position in PositionList:
-                admin_class.model.cabint.get_queryset().filter(id=position['id']).update(useposition=position['useposition'])
+                if position['id'] not in _position:
+                    _position[position['id']] = position['useposition']
+                else:
+                    _position[position['id']] += position['useposition']
+            for key, value in _position.items():
+                admin_class.model.cabint.get_queryset().filter(id=key).update(useposition=value)
+        except ValueError as e:
+            savelog.log_info("%s" % request.user, "Error", '更新机柜位置错误:%s' % e)
         except AttributeError as e:
             savelog.log_info("%s" % request.user, "Error", '导入配置文件失败:%s' % e)
         return import_status
@@ -437,7 +445,6 @@ class FileFunc(object):
         WorkList = []
         PositionList = []
         x = y = z = 0
-        company_height = 0
         for i in range(1, nrows):
             row = table.row_values(i)
             for j in range(0, ncols):
@@ -457,16 +464,14 @@ class FileFunc(object):
                         vlan_id = self._vlan_id(admin_class,row[8])
                         cabint_useposition = int(
                             admin_class.model.cabint.get_queryset().filter(id=cabint_id).values('useposition')[0]['useposition'])
-                        company_height += int(admin_class.model.company.get_queryset().filter(id=company_id).values('height')[0]['height'])
-                        cabint_useposition += company_height
+                        company_height = int(admin_class.model.company.get_queryset().filter(id=company_id).values("height")[0]['height'])
+                        PositionList.append({'id':cabint_id,'useposition':cabint_useposition+company_height})
                         WorkList.append(
                             admin_class.model(id=row[0], sn=row[1],company_id=company_id,types=row[3],cabint_id=cabint_id,position=row[5],
                                               hostname=row[6].strip(),ipaddress=row[7],vlan_id=vlan_id,system=str(row[9]),
                                               version=row[10],status=row[11],group_id=group_id,warranty_id=warranty_id,
                                               userinfo=row[14],contacts=row[15]))
-                        PositionList.append({'id': cabint_id, 'useposition': cabint_useposition})
                     except IndexError as e:
-                        print('row',row)
                         savelog.log_info("%s"%request.user,'Error',"%s" %e)
                         pass
 
@@ -475,10 +480,17 @@ class FileFunc(object):
         import_status = {'seccuss':y,'skip':x,'error':z}
 
         try:
-            print('work',WorkList)
+            _position = {}
             admin_class.model.objects.bulk_create(WorkList)
             for position in PositionList:
-                admin_class.model.cabint.get_queryset().filter(id=position['id']).update(useposition=position['useposition'])
+                if position['id'] not in _position:
+                    _position[position['id']] = position['useposition']
+                else:
+                    _position[position['id']] += position['useposition']
+            for key,value in _position.items():
+                admin_class.model.cabint.get_queryset().filter(id=key).update(useposition=value)
+        except ValueError as e:
+            savelog.log_info("%s" % request.user, "Error", '更新机柜位置错误:%s' % e)
         except AttributeError as e:
             savelog.log_info("%s" % request.user, "Error", '导入配置文件失败:%s' % e)
         return import_status

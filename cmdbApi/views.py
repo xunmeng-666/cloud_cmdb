@@ -183,46 +183,16 @@ class ProtocolDetail(generics.RetrieveUpdateDestroyAPIView):
         IsAuthenticatedOrReadOnly,
     )
 
-# class RouterList(generics.ListCreateAPIView):
-#     queryset = Router.objects.all()
-#     serializer_class = RouterSerializer
-#     permission_classes = (
-#         IsAuthenticatedOrReadOnly,
-#     )
-#
-# class RouterDetail(generics.RetrieveUpdateDestroyAPIView):
-#     queryset = Router.objects.all()
-#     serializer_class = RouterSerializer
-#     permission_classes = (
-#         IsAuthenticatedOrReadOnly,
-#     )
-#
-# class GFWList(generics.ListCreateAPIView):
-#     queryset = GFW.objects.all()
-#     serializer_class = GFWSerializer
-#     permission_classes = (
-#         IsAuthenticatedOrReadOnly,
-#     )
-#
-# class GFWDetail(generics.RetrieveUpdateDestroyAPIView):
-#     queryset = GFW.objects.all()
-#     serializer_class = GFWSerializer
-#     permission_classes = (
-#         IsAuthenticatedOrReadOnly,
-#     )
-#
+class BondingList(generics.ListCreateAPIView):
+    queryset = Bonding.objects.all()
+    serializer_class = BondingSerializer
+    permission_classes = (
+        IsAuthenticatedOrReadOnly,
+    )
 
-
-# class TaskList(generics.ListCreateAPIView):
-#     queryset = Taskflow.objects.all()
-#     serializer_class = TaskflowSerializer
-#     permission_classes = (
-#         IsAuthenticatedOrReadOnly,
-#     )
-#
-# class TaskDetail(generics.RetrieveUpdateDestroyAPIView):
-#     queryset = Taskflow.objects.all()
-#     serializer_class = TaskflowSerializer
-#     permission_classes = (
-#         IsAuthenticatedOrReadOnly,
-#     )
+class BondingDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Bonding.objects.all()
+    serializer_class = BondingSerializer
+    permission_classes = (
+        IsAuthenticatedOrReadOnly,
+    )

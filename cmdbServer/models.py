@@ -295,7 +295,7 @@ class Nic(models.Model):
         verbose_name_plural = '网卡'
 
     def __str__(self):
-        return "%s,%s,%s" % (self.sn,self.ipaddress,self.get_speed_display(),)
+        return "%s,%s,%s,%s" % (self.sn,self.ipaddress,self.server.hostname,self.get_speed_display(),)
 
     @property
     def company_name(self):

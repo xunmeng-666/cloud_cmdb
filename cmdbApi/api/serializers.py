@@ -41,6 +41,11 @@ class NicSerializer(serializers.HyperlinkedModelSerializer):
         model = Nic
         fields = ("url","sn","company_name","ipaddress","model","mac_address","speed","types","protocol","server","remarks")
 
+class BondingSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = Bonding
+        fields = ("nic","device","model","ipaddress1","ipaddress2","ipaddress3","ipaddress4")
+
 class RamSerializer(serializers.HyperlinkedModelSerializer):
     company_name = serializers.ReadOnlyField()
     class Meta:
@@ -79,6 +84,7 @@ class ServerSerializer(serializers.ModelSerializer):
         model = Servers
         fields = ("url","sn","company","company_name","types","position", "hostname","ipaddress",'vlan',"system","version","nics",
                   "cpus","disks","rams","status",'group',"group_name","start_date","end_date","warranty","contacts")
+
 
 
 class CabintSerializer(serializers.HyperlinkedModelSerializer):

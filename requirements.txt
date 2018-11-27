@@ -5,3 +5,5 @@ xlwt
 xlrd
 djangorestframework
 django-json-field
+ConfigParser
+urllib3
