@@ -277,7 +277,7 @@ def device(request,no_render=False):
             form_obj = form()
 
             querysets, filter_conditions = get_filter_objs(request, admin_class)
-            querysets, q_val = get_search_objs(request, querysets, admin_class)
+            querysets, q_val = get_search_objs(request, querysets.order_by('sn'), admin_class)
             querysets, new_order_key, order_column, last_orderby_key = get_orderby_objs(request, querysets)
             paginator = Paginator(querysets, admin_class.list_per_page)  # Show 25 contacts per page
             page = request.GET.get('_page')
@@ -338,7 +338,7 @@ def server(request,no_render=False):
             form_obj = form()
 
             querysets, filter_conditions = get_filter_objs(request, admin_class)
-            querysets, q_val = get_search_objs(request, querysets, admin_class)
+            querysets, q_val = get_search_objs(request, querysets.order_by('sn'), admin_class)
             querysets, new_order_key, order_column, last_orderby_key = get_orderby_objs(request, querysets)
             paginator = Paginator(querysets, admin_class.list_per_page)  # Show 25 contacts per page
             page = request.GET.get('_page')
@@ -456,7 +456,7 @@ def disk(request,no_render=False):
         elif request.method == 'GET':
             form_obj = form()
             querysets, filter_conditions = get_filter_objs(request, admin_class)
-            querysets, q_val = get_search_objs(request, querysets, admin_class)
+            querysets, q_val = get_search_objs(request, querysets.order_by('sn'), admin_class)
             querysets, new_order_key, order_column, last_orderby_key = get_orderby_objs(request, querysets)
             paginator = Paginator(querysets, admin_class.list_per_page)  # Show 25 contacts per page
             page = request.GET.get('_page')
@@ -515,7 +515,7 @@ def nic(request,no_render=False):
         elif request.method == 'GET':
             form_obj = form()
             querysets, filter_conditions = get_filter_objs(request, admin_class)
-            querysets, q_val = get_search_objs(request, querysets, admin_class)
+            querysets, q_val = get_search_objs(request, querysets.order_by('sn'), admin_class)
             querysets, new_order_key, order_column, last_orderby_key = get_orderby_objs(request, querysets)
             paginator = Paginator(querysets, admin_class.list_per_page)  # Show 25 contacts per page
             page = request.GET.get('_page')

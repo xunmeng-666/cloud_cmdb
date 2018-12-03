@@ -72,6 +72,9 @@
                                             <input onclick="checkAll(this)" type="checkbox" />
                                         </th>
                                             {% for column in admin_class.list_filter %}
+                                                {% if column == 'ID' %}
+                                                {{ pass }}
+                                                {% else %}
                                                     <th class='text-center'>
                                                     {% if order_column == column  %}
                                                        {{ column }}
@@ -80,6 +83,7 @@
                                                         {{ column }}
                                                     {% endif %}
                                                     </th>
+                                                {% endif %}
                                             {% endfor %}
                                         {% else %}
                                             <th style="width: 13%">日期</th>
@@ -103,9 +107,6 @@
                                                 <td class='text-center' style="text-align: center">
                                                     <input type='checkbox'  class='row-obj' name ='_selected_obj'  value='{{ row.id }}'></td>
                                                 <td style="text-align: center">
-                                                    <a href="">{{ row.id }}</a>
-                                                </td>
-                                                <td style="text-align: center">
                                                     <a href="/asset/{{ app_name }}/{{ model_name }}/detail/?id={{ row.id }}&name={{ row.name }}">{{ row.name }}</a>
                                                 </td>
                                                 <td style="text-align: center">
@@ -127,9 +128,6 @@
                                                 <td class='text-center' style="text-align: center">
                                                     <input type='checkbox'  class='row-obj' name ='_selected_obj'  value='{{ row.id }}'></td>
                                                 <td style="text-align: center">
-                                                    <a href="">{{ row.id }}</a>
-                                                </td>
-                                                <td style="text-align: center">
                                                     <a href="/asset/{{ app_name }}/{{ model_name }}/detail/?id={{ row.id }}&name={{ row.number }}">{{ row.number }}</a>
                                                 </td>
                                                 <td style="text-align: center">{{ row.size }}</td>
@@ -150,9 +148,6 @@
                                                 <tr class='gradeX '  >
                                                     <td class='text-center' style="text-align: center">
                                                         <input type='checkbox'  class='row-obj' name ='_selected_obj'  value='{{ row.id }}'></td>
-                                                    <td style="text-align: center">
-                                                        <a href="">{{ row.id }}</a>
-                                                    </td>
                                                     <td style="text-align: center">{{ row.name }}</td>
                                                     <td style="text-align: center">{{ row.model }}</td>
                                                     <td style="text-align: center">{{ row.get_types_display }}</td>
@@ -170,9 +165,6 @@
                                                 <tr class='gradeX '  >
                                                     <td class='text-center' style="text-align: center">
                                                         <input type='checkbox'  class='row-obj' name ='_selected_obj'  value='{{ row.id }}'></td>
-                                                    <td style="text-align: center">
-                                                        <a href="">{{ row.id }}</a>
-                                                    </td>
                                                     <td style="text-align: center">
                                                         <a href="/asset/{{ app_name }}/{{ model_name }}/detail/?id={{ row.id }}">
                                                             {{ row.sn }}
@@ -233,9 +225,6 @@
                                                 <tr class='gradeX '  >
                                                     <td class='text-center' style="text-align: center">
                                                         <input type='checkbox'  class='row-obj' name ='_selected_obj'  value='{{ row.id }}'></td>
-                                                    <td style="text-align: center">
-                                                        <a href="">{{ row.id }}</a>
-                                                    </td>
                                                     <td style="text-align: center">{{ row.name }}</td>
 
                                                     <form method='POST'>
@@ -250,9 +239,6 @@
                                                 <tr class='gradeX '  >
                                                     <td class='text-center' style="text-align: center">
                                                         <input type='checkbox'  class='row-obj' name ='_selected_obj'  value='{{ row.id }}'></td>
-                                                    <td style="text-align: center">
-                                                        <a href="">{{ row.id }}</a>
-                                                    </td>
                                                     <td style="text-align: center">{{ row.company.name }}</td>
                                                     <td style="text-align: center">{{ row.kernel }}</td>
                                                     <td style="text-align: center">{{ row.frequency }}</td>
@@ -271,9 +257,6 @@
                                                 <tr class='gradeX '  >
                                                     <td class='text-center' style="text-align: center">
                                                         <input type='checkbox'  class='row-obj' name ='_selected_obj'  value='{{ row.id }}'></td>
-                                                    <td style="text-align: center">
-                                                        <a href="">{{ row.id }}</a>
-                                                    </td>
                                                     <td style="text-align: center">{{ row.sn }}</td>
                                                     <td style="text-align: center">{{ row.cabint }}</td>
                                                     <td style="text-align: center">
@@ -307,9 +290,6 @@
                                                 <tr class='gradeX '  >
                                                     <td class='text-center' style="text-align: center">
                                                         <input type='checkbox'  class='row-obj' name ='_selected_obj'  value='{{ row.sn }}'></td>
-                                                    <td style="text-align: center">
-                                                        <a href="">{{ row.id }}</a>
-                                                    </td>
                                                     <td style="text-align: center">{{ row.sn }}</td>
                                                     <td style="text-align: center">{{ row.company.name }}</td>
                                                     <td style="text-align: center">{{ row.get_types_display }}</td>
@@ -335,9 +315,6 @@
                                                 <tr class='gradeX '  >
                                                     <td class='text-center' style="text-align: center">
                                                         <input type='checkbox'  class='row-obj' name ='_selected_obj'  value='{{ row.id }}'></td>
-                                                    <td style="text-align: center">
-                                                        <a href="">{{ row.id }}</a>
-                                                    </td>
                                                     <td style="text-align: center">{{ row.company.name }}</td>
                                                     <td style="text-align: center">{{ row.size }}</td>
                                                     <td style="text-align: center"><a href="/asset/{{ app_name }}/servers/detail/?id={{ row.server.id }}">{{ row.server.hostname }}</a></td>
@@ -354,9 +331,6 @@
                                                 <tr class='gradeX '  >
                                                     <td class='text-center' style="text-align: center">
                                                         <input type='checkbox'  class='row-obj' name ='_selected_obj'  value='{{ row.id }}'></td>
-                                                    <td style="text-align: center">
-                                                        <a href="">{{ row.id }}</a>
-                                                    </td>
                                                     <td style="text-align: center">{{ row.sn }}</td>
                                                     <td style="text-align: center">{{ row.company.name }}</td>
                                                     <td style="text-align: center">{{ row.ipaddress }}</td>
@@ -381,7 +355,6 @@
                                                 <tr class='gradeX '  >
                                                     <td class='text-center' style="text-align: center">
                                                         <input type='checkbox'  class='row-obj' name ='_selected_obj'  value='{{ row.id }}'></td>
-                                                    <td style="text-align: center">{{ row.id }}</td>
                                                     <td style="text-align: center;width: 8%">
                                                         {% build_bonding_nic admin_class %}
                                                     </td>
