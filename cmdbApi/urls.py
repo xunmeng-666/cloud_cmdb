@@ -32,7 +32,7 @@ urlpatterns = format_suffix_patterns([
     url(r'^device/(?P<pk>[0-9]+)/$',views.DeviceDetail.as_view(),name='device-detail'),
     url(r'^protocol/$',views.ProtocolList.as_view(),name='protocol-list'),
     url(r'^protocol/(?P<pk>[0-9]+)/$',views.ProtocolDetail.as_view(),name='protocol-detail'),
-    # url(r'^router/$', views.RouterList.as_view(), name='router-list'),
+    # url(r'^bonding/$', views.BondingList.as_view(), name='router-list'),
     # url(r'^router/(?P<pk>[0-9]+)/$',views.RouterDetail.as_view(), name='router-detail'),
 
     # url(r'^gfw/$',views.GFWList.as_view(),name='gfw-list'),

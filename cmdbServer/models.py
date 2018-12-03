@@ -389,6 +389,7 @@ class Bonding(models.Model):
     ipaddress2 = models.GenericIPAddressField(verbose_name='IP地址2',blank=True,null=True)
     ipaddress3 = models.GenericIPAddressField(verbose_name='IP地址3',blank=True,null=True)
     ipaddress4 = models.GenericIPAddressField(verbose_name='IP地址4',blank=True,null=True)
+    remarks = models.CharField(verbose_name='备注', max_length=200, blank=True, null=True)
 
     class Meta:
         verbose_name = 'Bonding'

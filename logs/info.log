@@ -1032,3 +1032,22 @@
 {'date': '2018-11-27 15:01:13', 'user': 'admin', 'action': 'Info', 'content': '访问URL:http://127.0.0.1:8000/asset/device/'}
 {'date': '2018-11-27 15:01:38', 'user': 'admin', 'action': 'Info', 'content': '访问URL:http://127.0.0.1:8000/asset/device/'}
 {'date': '2018-11-27 15:04:49', 'user': 'admin', 'action': 'Info', 'content': 'AccessUrl:http://127.0.0.1:8000/'}
+{'date': '2018-11-29 19:26:29', 'user': 'admin', 'action': 'Info', 'content': 'AccessUrl:http://127.0.0.1:8000/'}
+{'date': '2018-11-29 19:26:32', 'user': <SimpleLazyObject: <User: admin>>, 'action': 'Info', 'content': '登出服务器'}
+{'date': '2018-11-29 19:26:47', 'user': 'admin', 'action': 'Info', 'content': '尝试登录系统'}
+{'date': '2018-11-29 19:26:47', 'user': 'admin', 'action': 'Info', 'content': 'AccessUrl:http://127.0.0.1:8000/'}
+{'date': '2018-11-30 09:35:23', 'user': 'admin', 'action': 'Info', 'content': 'AccessUrl:http://127.0.0.1:8000/'}
+{'date': '2018-11-30 09:36:00', 'user': 'admin', 'action': 'Info', 'content': '访问URL:http://127.0.0.1:8000/asset/servers/'}
+{'date': '2018-11-30 09:36:05', 'user': 'admin', 'action': 'Info', 'content': '访问URL:http://127.0.0.1:8000/asset/cmdbServer/servers/detail/?id=3'}
+{'date': '2018-11-30 09:36:15', 'user': 'admin', 'action': 'Info', 'content': '访问URL:http://127.0.0.1:8000/asset/nic/'}
+{'date': '2018-11-30 09:36:38', 'user': 'admin', 'action': 'Info', 'content': '访问URL:http://127.0.0.1:8000/asset/protocol/'}
+{'date': '2018-11-30 09:36:43', 'user': 'admin', 'action': 'Info', 'content': '访问URL:http://127.0.0.1:8000/asset/bonding/'}
+{'date': '2018-11-30 09:37:51', 'user': 'admin', 'action': 'Info', 'content': '访问URL:http://127.0.0.1:8000/asset/servers/'}
+{'date': '2018-11-30 09:37:56', 'user': 'admin', 'action': 'Info', 'content': '访问URL:http://127.0.0.1:8000/asset/cmdbServer/servers/detail/?id=4'}
+{'date': '2018-11-30 09:51:12', 'user': <SimpleLazyObject: <User: admin>>, 'action': 'Info', 'content': '登出服务器'}
+{'date': '2018-11-30 09:51:17', 'user': 'admin', 'action': 'Info', 'content': '尝试登录系统'}
+{'date': '2018-11-30 09:51:19', 'user': 'admin', 'action': 'Info', 'content': '尝试登录系统'}
+{'date': '2018-11-30 09:51:19', 'user': 'admin', 'action': 'Info', 'content': 'AccessUrl:http://127.0.0.1:8000/'}
+{'date': '2018-12-02 13:39:20', 'user': 'admin', 'action': 'Info', 'content': 'AccessUrl:http://127.0.0.1:8000/'}
+{'date': '2018-12-02 13:40:34', 'user': 'admin', 'action': 'Info', 'content': '访问URL:http://127.0.0.1:8000/asset/servers/'}
+{'date': '2018-12-02 13:40:43', 'user': 'admin', 'action': 'Info', 'content': '访问URL:http://127.0.0.1:8000/asset/bonding/'}

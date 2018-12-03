@@ -13,7 +13,7 @@ class IdcInfoAdmin(BaseAdmin):
 
 class CabintAdmin(BaseAdmin):
     list_display = ("id","number",'size','useposition','room_number','idc')
-    list_filter = ["ID","机柜编号","机柜大小","已用大小","机房编号","机房"]
+    list_filter = ["ID","机柜编号","机柜容量","已用容量","机房编号","机房"]
     export_fields = ("id","number",'size','room_number','idc')
     list_per_page = 10
     search_fields = ['number','size','room_number','idc__name']
@@ -77,16 +77,16 @@ class DevicesAdmin(BaseAdmin):
 
 class ServersAdmin(BaseAdmin):
     list_display = ("id","sn","cabint",'hostname','ipaddress','vlan',"group",'status','warranty','userinfo','contacts')
-    list_filter = ["ID","SN","机柜","主机名",'管理地址','管理VLAN','主机组','状态','质保截止时间','IPMI用户信息','负责人']
+    list_filter = ["ID","SN","机柜","主机名",'IPMI地址','IPMIVLAN','主机组','状态','质保截止时间','IPMI用户信息','负责人']
     export_fields = ["id","sn","company_id","types",'cabint_id',"position",'hostname','ipaddress','vlan_id',"system","version","status",
                      "group_id","warranty",'userinfo','contacts']
     list_per_page = 10
     search_fields = ["sn","cabint__number",'hostname','ipaddress',"group__name","status"]
 
 class BondingAdmin(BaseAdmin):
-    list_display = ("id","nic","device","model","ipaddress1","ipaddress2","ipaddress3","ipaddress4")
-    list_filter = ["ID",'网卡',"设备","模式","IP1","IP2","IP3",'IP4']
-    search_fields = ["nic","device","model","ipaddress1","ipaddress2","ipaddress3","ipaddress4"]
+    list_display = ("id","nic","device","model","ipaddress1","ipaddress2","ipaddress3","ipaddress4","remarks")
+    list_filter = ["ID",'网卡',"设备","模式","IP1","IP2","IP3",'IP4',"备注"]
+    search_fields = ["nic","device","model","ipaddress1","ipaddress2","ipaddress3","ipaddress4","remarks"]
 
 
 class WarrantyAdmin(BaseAdmin):
