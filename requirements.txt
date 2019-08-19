@@ -1,5 +1,4 @@
 Django==1.11.16
-psycopg2
 psycopg2-binary
 xlwt
 xlrd
@@ -7,3 +6,8 @@ djangorestframework
 django-json-field
 ConfigParser
 urllib3
+pyvmomi
+pexpect
+pycryptodome
+ansible==2.7.10
+dwebsocket

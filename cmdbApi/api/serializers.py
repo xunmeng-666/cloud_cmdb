@@ -39,7 +39,7 @@ class NicSerializer(serializers.HyperlinkedModelSerializer):
     company_name = serializers.ReadOnlyField()
     class Meta:
         model = Nic
-        fields = ("url","sn","company_name","ipaddress","model","mac_address","speed","types","protocol","server","remarks")
+        fields = ("url","sn","company_name","ipaddress","mac_address","speed","types","protocol","server","remarks")
 
 class BondingSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
@@ -59,10 +59,9 @@ class DiskSerializer(serializers.HyperlinkedModelSerializer):
         fields = ("url","sn","company_name","types","size","server","status","remarks")
 
 class CpuSerializer(serializers.HyperlinkedModelSerializer):
-    company_name = serializers.ReadOnlyField()
     class Meta:
         model = CPU
-        fields = ("url","company_name","kernel","frequency","counts","server")
+        fields = ("url","kernel","frequency","counts","server")
 
 class ProtocolSerializer(serializers.HyperlinkedModelSerializer):
     servers = serializers.HyperlinkedRelatedField(many=True,read_only=True,view_name='servers-detail')
@@ -72,10 +71,18 @@ class ProtocolSerializer(serializers.HyperlinkedModelSerializer):
         fields = ("url","name","number","ipaddress","port_range","servers","device")
         depth = 3
 
+class MonitorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Monitors
+        # 显示所有字段
+        fields = "__all__"
+        depth = 10
+
 class ServerSerializer(serializers.ModelSerializer):
     nics = NicSerializer(many=True,read_only=True,)
     cpus = CpuSerializer(many=True,read_only=True,)
     disks = DiskSerializer(many=True,read_only=True)
+    monitor = MonitorSerializer(many=True,read_only=True)
     rams = RamSerializer(many=True,read_only=True,)
     group_name = serializers.ReadOnlyField()
     company_name = serializers.ReadOnlyField()
@@ -83,9 +90,7 @@ class ServerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Servers
         fields = ("url","sn","company","company_name","types","position", "hostname","ipaddress",'vlan',"system","version","nics",
-                  "cpus","disks","rams","status",'group',"group_name","start_date","end_date","warranty","contacts")
-
-
+                  "cpus","disks","rams","monitor",'group',"group_name","start_date","end_date","warranty","contacts")
 
 class CabintSerializer(serializers.HyperlinkedModelSerializer):
     devices = DeviceSerializer(many=True,read_only=True,)
@@ -103,3 +108,10 @@ class IdcSerializer(serializers.ModelSerializer):
         fields = ("url","name","address","contacts","phone","cabintd","remarks")
         depth = 10
 
+class AppsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Apps
+        fields = "__all__"
+
+    def display_value(self,instance):
+        return "host:%s" %instance.ipaddress

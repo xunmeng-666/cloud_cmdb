@@ -4,6 +4,7 @@ from django.conf.urls import url,include
 from rest_framework.urlpatterns import format_suffix_patterns
 from cmdbApi import views
 
+
 urlpatterns = format_suffix_patterns([
     url(r'^api-auth/', include('rest_framework.urls')),
     url(r'^idc/$',views.IdcList.as_view(),name='idc-list'),
@@ -32,8 +33,10 @@ urlpatterns = format_suffix_patterns([
     url(r'^device/(?P<pk>[0-9]+)/$',views.DeviceDetail.as_view(),name='device-detail'),
     url(r'^protocol/$',views.ProtocolList.as_view(),name='protocol-list'),
     url(r'^protocol/(?P<pk>[0-9]+)/$',views.ProtocolDetail.as_view(),name='protocol-detail'),
-    # url(r'^bonding/$', views.BondingList.as_view(), name='router-list'),
-    # url(r'^router/(?P<pk>[0-9]+)/$',views.RouterDetail.as_view(), name='router-detail'),
+    url(r'^apps/$', views.AppsList.as_view(), name='apps-list'),
+    url(r'^apps/(?P<pk>[0-9]+)/$',views.AppsDetail.as_view(), name='apps-detail'),
+    url(r'^monitor/$', views.MonitorList.as_view(), name='monitor-list'),
+    url(r'^monitor/(?P<pk>[0-9]+)/$',views.MonitorDetail.as_view(), name='monitor-detail'),
 
     # url(r'^gfw/$',views.GFWList.as_view(),name='gfw-list'),
     # url(r'^gfw/(?P<pk>[0-9]+)/$',views.GFWDetail.as_view(),name='gfw-detail'),
@@ -42,3 +45,4 @@ urlpatterns = format_suffix_patterns([
     # url(r'^task/(?P<pk>[0-9]+)/$',views.TaskDetail.as_view(),name='task-detail'),
 
 ])
+

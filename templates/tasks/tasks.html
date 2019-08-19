@@ -1,0 +1,718 @@
+{% extends 'bash/bash.html' %}
+{% block head%}
+
+{% endblock %}
+{% block content %}
+{% load deploy_tag %}
+
+    <div class="row" id="report1">
+        <div class="col-sm-12">
+            <ol class="breadcrumb titles" style="background-color: #ffffff;font-size: 12px;top: -20px">
+                <a href="/" class="tip-bottom" data-original-title="Go to Home"><i class="icon-home"></i> Home </a>>
+                <a href="/asset/tasks/" class="tip-bottom" data-original-title="">Tasks</a>>
+                <a href="/asset/tasks/" title="数据中心信息表" class="tip-bottom" data-original-title="">远程操作</a>
+            </ol>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card form" id="form1">
+                <div class="card-header">
+                    <h4 style="text-align: center">远程操作</h4>
+                </div>
+                <form>
+                    <br>
+                    <div class="row" id="select_task">
+                        <label class="col-md-2" style="max-width: 100px">选择类型:</label>
+                        <div class="col-md-5">
+                            <select class="selected" id="selected">
+                            <option value="">------</option>
+                            <option value="group">服务器组</option>
+                            <option value="hosts">服务器</option>
+                        </select>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row" id="group_task">
+{#                        <label class="col-md-1">选择组:</label>#}
+                        <label class="col-md-1"></label>
+                        <div class="col-md-5 ">
+                            <div class="form-group border">
+                                <div style="background-color: #f3f6f1;" class="border">
+                                    <span >已选择的组列表
+                                    <span class="fa fa-question" title="选择一个或多个组后，通过箭头添加或移除"></span></span>
+                                </div>
+                                <p class="selector-filter" style="margin-top: 20px"></p>
+                                <select multiple="multiple" id="del_group" class="filtered" style="height: 230px;width: 100%">
+                                </select>
+                                <a title="移除所有"  id="del_all_groups" class="active" >移除所有 <i class="fa fa-fast-forward"></i></a>
+
+                            </div>
+                        </div>
+                        <ul class="list-unstyled" style="padding: 135px 0px">
+                            <li>
+                                <a title="Choose"  id="add_group_list" class="fa fa-arrow-left"></a>
+                            </li>
+                            <li>
+                                <a title="Remove" id="del_group_list" class="fa fa-arrow-right"></a>
+                            </li>
+                        </ul>
+                        <div class="col-md-5">
+                            <div class="form-group border">
+                                <div style="background-color: #59dee4;" class="border">
+                                    <span> 组列表 </span>
+                                </div>
+                                <p></p>
+                                <select class="filtered" multiple="multiple" id="add_group" style="height: 285px;width: 100%">
+                                    {% build_group_list admin_class %}
+                                </select>
+                                <a title="添加所有" id="add_all_groups" class="active" ><i class="fa fa-fast-backward"></i>添加所有</a>
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="form-group row" id="host_task">
+{#                        <label class="col-md-1">选择主机:</label>#}
+                        <label class="col-md-1"></label>
+                        <div class="col-md-5 ">
+                            <div class="form-group border">
+                                <div style="background-color: #f3f6f1;" class="border">
+                                    <span >已选择的主机列表
+                                    <span class="fa fa-question" title="选择一个或多个组后，通过箭头添加或移除"></span></span>
+                                </div>
+                                <p></p>
+                                <select multiple="multiple" id="del_host" class="filtered" style="height: 230px;width: 100%">
+                                </select>
+                                <a title="移除所有"  id="del_all_hosts" class="active" >移除所有 <i class="fa fa-fast-forward"></i></a>
+
+                            </div>
+                        </div>
+                        <ul class="list-unstyled" style="padding: 135px 0px">
+                                <li>
+                                    <a title="Choose" id="add_host_list" class="fa fa-arrow-left"></a>
+                                </li>
+                                <li>
+                                    <a title="Remove" id="del_host_list" class="fa fa-arrow-right"></a>
+                                </li>
+                            </ul>
+                        <div class="col-md-5">
+                            <div class="form-group border">
+                                <div style="background-color: #59dee4;" class="border">
+                                    <span> 主机列表 </span>
+                                </div>
+
+                                <p class="selector-filter" style="margin-top: 20px"></p>
+                                <select class="filtered" id="add_host" multiple="multiple" style="height: 285px;width: 100%">
+                                    {% build_host_list admin_class %}
+                                </select>
+
+
+                                <a title="添加所有" id="add_all_hosts" class="active" ><i class="fa fa-fast-backward"></i>添加所有</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row" id="select-hosts">
+                        <div class="form-group col-md-12">
+                            <input type="checkbox" id="selete_host">
+                            <span>选择主机
+                                <small style="color: red">建议：主机和组不要重复选择，否则重复执行指令</small>
+                            </span>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="form-group row" id="hosts_task">
+{#                        <label class="col-md-1">选择主机:</label>#}
+                        <label class="col-md-1"></label>
+                        <div class="col-md-5 ">
+                            <div class="form-group border">
+                                <div style="background-color: #f3f6f1;" class="border">
+                                    <span >已选择的主机列表
+                                    <span class="fa fa-question" title="选择一个或多个组后，通过箭头添加或移除"></span></span>
+                                </div>
+                                <p></p>
+                                <select multiple="multiple" id="del_hosts" class="filtered" style="height: 230px;width: 100%">
+                                </select>
+                                <a title="移除所有"  id="del_all_hosts_1" class="active" >移除所有 <i class="fa fa-fast-forward"></i></a>
+
+                            </div>
+                        </div>
+                        <ul class="list-unstyled" style="padding: 135px 0px">
+                                <li>
+                                    <a title="Choose" id="add_host_list_1" class="fa fa-arrow-left"></a>
+                                </li>
+                                <li>
+                                    <a title="Remove" id="del_host_list_1" class="fa fa-arrow-right"></a>
+                                </li>
+                            </ul>
+                        <div class="col-md-5">
+                            <div class="form-group border">
+                                <div style="background-color: #59dee4;" class="border">
+                                    <span> 主机列表 </span>
+                                </div>
+
+                                <p class="selector-filter" style="margin-top: 20px"></p>
+                                <select class="filtered" id="add_host_1" multiple="multiple" style="height: 285px;width: 100%">
+                                    {% build_host_list admin_class %}
+                                </select>
+
+
+                                <a title="添加所有" id="add_all_hosts_1" class="active" ><i class="fa fa-fast-backward"></i>添加所有</a>
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row" id="command_task">
+                        <div class="form-group col-md-12">
+                            <label>BASH Script
+                            <small style="color: red">* 执行命令需谨慎，造成损失无法挽回</small>
+                            </label>
+                            <div class="form-group">
+                                <div class="col-md-8">
+                                    <label>
+                                        <input type="radio" name="radio1" onclick="checkbox(this)"> 执行Playbook
+                                        <small style="color: red" class="fa fa-question" title="上传文件必须是.zip格式，执行入口文件必须是run.yaml"> 查看帮助</small>
+                                        <div>
+                                            <input class="btn btn-sm" style="max-width: 205px" type="file" id="upload">
+                                            <span style='top: 15px;color:red;' id='upload-error'>文件格式不正确，必须是zip格式压缩包</span>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div class="col-md-3">
+                                    <input type="radio"  onclick="checkbox(this)" name="radio2">
+                                    <label>批量修改密码</label>
+                                    <input type="password" id="host_password" value="">
+                                </div>
+                                <div class="col-md-6">
+                                    <input type="radio" onclick="checkbox(this)" name="radio3">
+                                    <label>执行Shell命令</label>
+                                    <textarea style="width: 100%;height: 50px" id="shellCommand" placeholder="如: ls -al"></textarea>
+                                </div>
+                                <div class="col-md-2">
+                                    <input type="button" id="btnTask" class="btn btn-info btn-sm " value="提交">
+                                    <small id="result"><a href="#" data-toggle="modal" data-target="#gridSystemModal">查看执行结果</a></small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="modal fade bs-example-modal-lg" id="gridSystemModal" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+                <h4 class="modal-title" id="myLargeModalLabel">BashLogs</h4>
+            </div>
+            <div class="modal-body" id="display_logfile" style="background-color: #ffffff;display:block;height: 500px; overflow:scroll; border:1px solid;">
+                <div class="row">
+                    <ul class="fa-ul">
+                    </ul>
+                </div>
+            </div>
+                <div class="modal-footer">
+                    <small id="small" class="center"><i class="fa fa-refresh fa-spin"></i>  努力加载中...</small>
+                </div>
+          </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div>
+
+
+
+    <script src="/static/js/jquery.min.js"></script>
+<script>
+var selectValue = "";
+flag = false;
+var pattern = /&/g;
+    $(function () {
+        hides();
+        check_group_null()
+    })
+
+    function hides() {
+        $("#host_task").hide();
+        $("#host_task").prev().hide();
+        $("#hosts_task").hide();
+        $("#hosts_task").prev().hide();
+        $("#select-hosts").hide();
+
+        $("#host_password").hide();
+        $("#shellCommand").hide();
+        $("#upload").hide();
+        $("#upload-error").hide();
+        $("#result").hide();
+        $("#group_task").hide();
+        $("#group_task").prev().hide();
+
+    }
+
+    $("#selected").change(function () {
+        var val = this.value;
+        selectValue = val;
+        $("#selete_host").prop('checked',false);
+        if(val == 'group'){
+            $("#group_task").show();
+            $("#select-hosts").show();
+            $("#group_task").prev().show();
+            $("#host_task").hide();
+            $("#host_task").prev().hide();
+
+            check_group_null();
+
+        }else if(val == 'hosts'){
+            $("#host_task").show();
+            $("#host_task").prev().show();
+            $("#select-hosts").hide();
+            $("#group_task").hide();
+            $("#group_task").prev().hide();
+            $("#hosts_task").hide();
+            $("#hosts_task").prev().hide();
+            check_host_null();
+        }else {
+            $("#group_task").hide();
+            $("#group_task").prev().hide();
+            $("#select-hosts").hide();
+            $("#host_task").hide();
+            $("#host_task").prev().hide();
+            $("#hosts_task").hide();
+            $("#hosts_task").prev().hide();
+        }
+    })
+
+
+    $("#btnTask").click(function () {
+        $("#display_logfile ul li").remove();
+        if (selectValue==''){
+            alert('未选择主机或者组')
+        }
+        else {
+            groupsID = [];
+            hosts = [];
+            data = {};
+            v = new FormData();
+            var host = document.getElementById('selete_host');
+            if(selectValue == 'group'){
+                for(var i = 0; i < $("#del_group").children().length; i++){
+                    groupsID.push($("#del_group").children()[i].value)
+                }
+
+            }else if(selectValue == 'hosts') {
+                for (var i = 0; i < $("#del_host").children().length; i++) {
+                    hosts.push($("#del_host").children()[i].value)
+                }
+            }
+            if(groupsID.length == 0 && hosts.length == 0){
+                alert('未选择主机或者组')
+            }
+            if(host.checked){
+                for(var i = 0; i < $("#del_hosts").children().length; i++){
+                    hosts.push($("#del_hosts").children()[i].value)
+                }
+            }
+
+            data['groups'] = groupsID;
+            data['hosts'] = hosts;
+            if(flag == false){alert('选择BASH操作')}
+            $("input[type='radio']").each(function () {
+                var s = $(this).prop("checked")
+                if(s){
+                    flag = true;
+                    if(this.name == 'radio1'){
+                        uid = $("#upload")[0].defaultValue;
+                        if(uid){
+                            data['data'] = uid;
+                            data['type'] = 'file';
+                            $("#result").show();
+                            webSocket(data)
+                        }else {
+                            alert('未添加文件')
+                        }
+
+                    }
+                    else if(this.name == 'radio2'){
+                        password = $("#host_password")[0].value;
+                        if (password.length > 0 ){
+                            data['data'] = password;
+                            data['type'] = 'changePassword';
+                            $("#result").show();
+                            webSocket(data)
+                        }else{
+                            alert('输入要修改的密码')
+                        }
+                    }
+                    else if(this.name == 'radio3'){
+                        command = $("#shellCommand")[0].value;
+                        if (command.length > 0){
+                            if(pattern.test(command)){
+                                alert('检测到非法字符，请重新输入')
+                            }
+                            else {
+                                data['data'] = command;
+                                data['type'] = 'shellCommand';
+                                $("#result").show();
+                                webSocket(data)
+                            }
+                        }else {
+                            alert('输入要执行的命令')
+                        }
+                    }
+                }
+            })
+        }
+    })
+
+    function btnAjax() {
+        console.log('执行ajax')
+        files = $("#upload")[0].files[0];
+        var fd = new FormData();
+        fd.append('file',files)
+        $.ajax({
+            url: "/asset/tasks/",
+            type: 'POST',
+            data: fd,
+            processData: false,  // tell jQuery not to process the data
+            contentType: false,
+            success:function (response) {
+                var obj = JSON.parse(response);
+                uid = obj.uid;
+                console.log('设置uid',uid)
+                $("#upload").attr('value',uid)
+            }
+        })
+    }
+
+    function webSocket(data1) {
+        var urls = window.location.host;
+        if (window.s){window.s.close()}
+        var socket = new WebSocket("ws://"+urls+"/asset/task_websocket/?data="+JSON.stringify(data1));
+        socket.binaryType = "arraybuffer";
+        console.log('socket',socket)
+        socket.onopen = function (event) {
+            console.log('data',data1)
+            socket.send(data1)
+        };
+        socket.onmessage = function (p1) {
+            log_data = p1.data;
+            console.log('返回数据',log_data);
+            if (log_data == 'success'){
+                $("#small")[0].innerText = '加载完成';
+                $("#small").children("i").removeClass('fa-spin')
+            }
+            $("#display_logfile").find('div').eq(0).find('ul').append("<li>"+log_data + "\t\n"+"</li>");
+        };
+        if(socket.readyState == WebSocket.OPEN)socket.onopen();
+        window.s = socket;
+        if(!window.s){alert("websocket 未连接")}
+        window.onbeforeunload = function () {
+            socket.send('quit')
+            WebSocket.close();
+        }
+    }
+
+
+
+    $("#upload").change(function () {
+       {#    检查文件后缀是否合法#}
+
+        var arr = 'zip';
+        var filename = this.value;
+        var index = filename.lastIndexOf(".");
+        var ext = filename.substr(index+1);
+        var num = this.name;
+        var err = $("#upload-error");
+        var fileobj = this.files[0];
+        if (fileobj.size <= 0 || typeof fileobj == "undefined"){
+            alert('上传文件大小为0或文件不正确,请重新上传');
+            return;
+        }
+        if (ext == arr){
+            console.log('上传文件')
+            flag = true;
+            if (err.show()){
+                err.hide();
+            }
+            btnAjax()
+
+        }else {
+            flag = false;
+            err.show()
+        }
+    })
+
+    function checkbox(self) {
+        flag = true;
+        var name = self.name
+        $("input[type='radio']").each(function () {
+            if(this.name != name){
+                $(this).prop('checked',false)
+            }
+            change_password();
+            shellCommand();
+            upload();
+        })
+        return name
+    }
+
+    $("#selete_host").click(function () {
+        if(this.checked){
+            $("#hosts_task").show();
+            $("#hosts_task").prev().show();
+        }else{
+
+            $("#hosts_task").hide();
+            $("#hosts_task").prev().hide();
+
+        }
+        check_host_null();
+
+    });
+
+    function upload() {
+        var change = document.getElementsByName('radio1');
+        if(change[0].checked){
+            $("#upload").show();
+        }else{
+            $("#upload").hide();
+            flag = true;
+        }
+    }
+
+    function change_password() {
+        var change = document.getElementsByName('radio2');
+        if(change[0].checked){
+            $("#host_password").show();
+            $("#host_password")[0].value = ""
+        }else{
+
+            $("#host_password").hide();
+        }
+    }
+
+
+
+    function shellCommand() {
+        var change = document.getElementsByName('radio3');
+        if(change[0].checked){
+            $("#shellCommand").show();
+        }else{
+
+            $("#shellCommand").hide();
+        }
+    }
+
+    function check_group_null() {
+        var del_group = document.getElementById('del_group');
+        var add_group = document.getElementById('add_group');
+        if(del_group.innerText == ''){
+            $("#del_group_list").removeAttr('href')
+            $("#del_all_groups").removeAttr('href')
+        }else{
+            $("#del_group_list").attr('href','#')
+            $("#del_all_groups").attr('href','#')
+        }
+        if (add_group.innerText == ''){
+            $("#add_group_list").removeAttr('href')
+            $("#add_all_groups").removeAttr('href')
+        }else{
+            $("#add_group_list").attr('href','#')
+            $("#add_all_groups").attr('href','#')
+        }
+    }
+
+
+    $("#add_group_list").on('click',function () {
+        var obj = document.getElementById('add_group');
+        var objs = document.getElementById('del_group');
+        $("#add_group option:selected").each(function () {
+            ids = this.value;
+            texts =this.text;
+            obj.options.remove(this.index)
+            objs.options.add(new Option(texts,ids))
+        })
+        check_group_null()
+    })
+
+    $("#del_group_list").on('click',function () {
+        var obj = document.getElementById('add_group');
+        var objs = document.getElementById('del_group');
+        $("#del_group option:selected").each(function () {
+            ids = this.value;
+            texts =this.text;
+            objs.options.remove(this.index)
+            obj.options.add(new Option(texts,ids))
+        })
+        check_group_null()
+    })
+
+    $("#add_all_groups").on('click',function () {
+        var obj = document.getElementById('add_group');
+        var objs = document.getElementById('del_group');
+        for (var i = 0; i < obj.options.length; i ++){
+            var val = obj.options[i].value;
+            var text = obj.options[i].text;
+            objs.options.add(new Option(text,val))
+        }
+        obj.innerHTML = ''
+        check_group_null()
+    })
+
+    $("#del_all_groups").on('click',function () {
+        var obj = document.getElementById('add_group');
+        var objs = document.getElementById('del_group');
+        for (var i = 0; i < objs.options.length; i ++){
+            var val = objs.options[i].value;
+            var text = objs.options[i].text;
+            obj.options.add(new Option(text,val))
+        }
+        objs.innerHTML = ''
+        check_group_null()
+    })
+
+
+    function check_host_null() {
+        var del_host = document.getElementById('del_host');
+        var add_host = document.getElementById('add_host');
+        var del_host1 = document.getElementById('del_hosts');
+        var add_host1 = document.getElementById('add_host_1');
+
+
+        if(del_host.innerText == ''){
+            $("#del_host_list").removeAttr('href')
+            $("#del_all_hosts").removeAttr('href')
+
+        }else{
+            $("#del_host_list").attr('href','#')
+            $("#del_all_hosts").attr('href','#')
+        }
+        if (add_host.innerText == ''){
+            $("#add_host_list").removeAttr('href')
+            $("#add_all_hosts").removeAttr('href')
+        }else{
+            $("#add_host_list").attr('href','#')
+            $("#add_all_hosts").attr('href','#')
+        }
+        if (add_host1.innerText == ''){
+            $("#add_host_list_1").removeAttr('href')
+            $("#add_all_hosts_1").removeAttr('href')
+        }else{
+            $("#add_host_list_1").attr('href','#')
+            $("#add_all_hosts_1").attr('href','#')
+        }
+
+        if (del_host1.innerText == ''){
+            $("#del_host_list_1").removeAttr('href')
+            $("#del_all_hosts_1").removeAttr('href')
+        }else{
+            $("#del_all_hosts_1").attr('href','#')
+            $("#del_host_list_1").attr('href','#')
+        }
+
+
+    }
+
+    $("#add_host_list").on('click',function () {
+        var obj = document.getElementById('add_host');
+        var objs = document.getElementById('del_host');
+        $("#add_host option:selected").each(function () {
+            ids = this.value;
+            texts =this.text;
+            obj.options.remove(this.index)
+            objs.options.add(new Option(texts,ids))
+        })
+        check_host_null()
+    })
+
+    $("#del_host_list").on('click',function () {
+        var obj = document.getElementById('add_host');
+        var objs = document.getElementById('del_host');
+        $("#del_host option:selected").each(function () {
+            ids = this.value;
+            texts =this.text;
+            objs.options.remove(this.index)
+            obj.options.add(new Option(texts,ids))
+        })
+        check_host_null()
+    })
+
+    $("#add_all_hosts").on('click',function () {
+        var obj = document.getElementById('add_host');
+        var objs = document.getElementById('del_host');
+        for (var i = 0; i < obj.options.length; i ++){
+            var val = obj.options[i].value;
+            var text = obj.options[i].text;
+            objs.options.add(new Option(text,val))
+        }
+        obj.innerHTML = ''
+        check_host_null()
+    })
+
+    $("#del_all_hosts").on('click',function () {
+        var obj = document.getElementById('add_host');
+        var objs = document.getElementById('del_host');
+        for (var i = 0; i < objs.options.length; i ++){
+            var val = objs.options[i].value;
+            var text = objs.options[i].text;
+            obj.options.add(new Option(text,val))
+
+        }
+        objs.innerHTML = ''
+        check_host_null()
+    })
+
+    $("#add_host_list_1").on('click',function () {
+        var obj = document.getElementById('add_host_1');
+        var objs = document.getElementById('del_hosts');
+        $("#add_host_1 option:selected").each(function () {
+            ids = this.value;
+            texts =this.text;
+            obj.options.remove(this.index)
+            objs.options.add(new Option(texts,ids))
+        })
+        check_host_null()
+    })
+
+    $("#del_host_list_1").on('click',function () {
+        var obj = document.getElementById('add_host_1');
+        var objs = document.getElementById('del_hosts');
+        $("#del_hosts option:selected").each(function () {
+            ids = this.value;
+            texts =this.text;
+            objs.options.remove(this.index)
+            obj.options.add(new Option(texts,ids))
+        })
+        check_host_null()
+    })
+
+    $("#add_all_hosts_1").on('click',function () {
+        var obj = document.getElementById('add_host_1');
+        var objs = document.getElementById('del_hosts');
+        for (var i = 0; i < obj.options.length; i ++){
+            var val = obj.options[i].value;
+            var text = obj.options[i].text;
+            objs.options.add(new Option(text,val))
+        }
+        obj.innerHTML = ''
+        check_host_null()
+    })
+
+    $("#del_all_hosts_1").on('click',function () {
+        var obj = document.getElementById('add_host_1');
+        var objs = document.getElementById('del_hosts');
+        for (var i = 0; i < objs.options.length; i ++){
+            var val = objs.options[i].value;
+            var text = objs.options[i].text;
+            obj.options.add(new Option(text,val))
+
+        }
+        objs.innerHTML = '';
+        check_host_null()
+    })
+
+
+
+</script>
+{% endblock %}

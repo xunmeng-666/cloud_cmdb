@@ -9,15 +9,28 @@ def build_project_name(admin_class):
     return admin_class.model._meta.model_name
 
 @register.simple_tag
-def build_idc_info(admin_class,obj_id):
-    obj = admin_class.model.objects.get(id=obj_id)
-    ele_span = "<span class='percent' style='color: #0e0e0e;font-weight:bold'>机柜数量:%s</span>" %obj.cabintd.count()
+def build_cabint_info(admin_class,objects):
+    ele_span = 0
+    for obj_id in objects:
+        obj = admin_class.model.objects.get(id=obj_id.get("id"))
+        ele_span += obj.cabintd.count()
+    return mark_safe(ele_span)
+
+@register.simple_tag
+def build_server_info(admin_class,objects):
+
+    return admin_class.model.cabintd.field.model.servers.field.model.objects.count()
+
+
+
+@register.simple_tag
+def build_idc_count(admin_class):
+    ele_span = admin_class.model.objects.count()
     return mark_safe(ele_span)
 
 
 @register.simple_tag
 def build_project_verbose_name(admin_class):
-    print('admin_class',admin_class)
     return admin_class.model._meta.verbose_name
 
 @register.simple_tag
@@ -115,7 +128,7 @@ def build_cabint_useinfo(obj,obj_id):
             ele_tr = "<tr>"
             ele_td = "<td style='text-align: center'>%s</td>" %info['number']
             ele_td += "<td style='text-align: center'>%sU</td>" %info['servers__position']
-            ele_td += "<td style='text-align: center'><a href='/asset/cmdbServer/device/detail/?id=%s'>%s</a></td>" %(info['servers__id'],info['servers__hostname'])
+            ele_td += "<td style='text-align: center'><a href='/asset/cmdbServer/servers/detail/?id=%s'>%s</a></td>" %(info['servers__id'],info['servers__hostname'])
             ele_td += "<td style='text-align: center'>%s</td>" %info['servers__ipaddress']
             ele_td += "<td style='text-align: center'>%s</td>" %info['servers__company__height']
             ele_tr += ele_td +"</tr>"
@@ -174,7 +187,10 @@ def build_servers_info(obj,obj_id):
         else:
             ele_td += "<td style='text-align: center'>%s</td>" % info['nics__ipaddress']
         ele_td += "<td style='text-align: center'>%s</td>" % info['nics__protocol__number']
-        ele_td += "<td style='text-align: center'><a href='/asset/cmdbServer/device/detail/?id=%s'>%s</a></td>" %(info['nics__protocol__device__id'],info['nics__protocol__device__name'])
+        if not info['nics__protocol__device__name'] or info['nics__protocol__device__name'] is None:
+            ele_td += "<td style='text-align: center'><a href='#'>%s</a></td>" %(info['nics__protocol__device__name'])
+        else:
+            ele_td += "<td style='text-align: center'><a href='/asset/cmdbServer/device/detail/?id=%s'>%s</a></td>" %(info['nics__protocol__device__id'],info['nics__protocol__device__name'])
 
         ele_tr += ele_td + "</tr>"
         ele += ele_tr
@@ -223,12 +239,14 @@ import json
 @register.simple_tag
 def build_logs_info(obj):
     ele = ""
-    for content in obj.values():
+    for content in obj.values().order_by("-id"):
         ele_tr = "<tr>"
-        ele_td = "<td>%s</td>" %content["date"].strftime("%Y-%m-%d %H:%M:%S")
-        ele_td += "<td>%s</td>" %content["user"]
-        ele_td += "<td>%s</td>" %content["action"]
-        ele_td += "<td>%s</td>" %content["content"]
+        ele_td = "<td style='text-align: center'>%s</td>" %content["date"].strftime("%Y-%m-%d %H:%M:%S")
+        ele_td += "<td style='text-align: center'>%s</td>" %content["user"]
+
+        print('action',content["content"])
+        ele_td += "<td style='text-align: center'>%s</td>" %content["action"]
+        ele_td += "<td name='content'>%s</td>" %content["content"]
         ele_tr += ele_td
         ele_tr += "</tr>"
         ele += ele_tr
@@ -272,3 +290,65 @@ def build_bonding_nic(admin_class):
 def get_abs_value(loop_num , curent_page_number):
     """返回当前页与循环loopnum的差的绝对值"""
     return abs(loop_num - curent_page_number)
+
+@register.simple_tag
+def build_idc_list(admin_class):
+    ele = ""
+    obj = admin_class.model.idc.get_queryset().values()
+    for name in obj:
+        ele_option = "<option value=''>-----</option>"
+        ele_option += "<option value='"+ name.get("name") +"'>"+name.get("name")+"</option>"
+    ele += ele_option
+    return mark_safe(ele)
+
+@register.simple_tag
+def build_idcobj_list(admin_class):
+    ele = ""
+    ele_option = "<option value=''>-----</option>"
+    obj = admin_class.model.cabint.get_queryset().model.idc.get_queryset().values()
+    for name in obj:
+        ele_option += "<option value='" + name.get("name") + "'>" + name.get("name") + "</option>"
+    ele += ele_option
+    return mark_safe(ele)
+
+@register.simple_tag
+def build_group_list(admin_class):
+    ele = ""
+    ele_option = ""
+    obj = admin_class.model.group.get_queryset().values()
+    for name in obj:
+        ele_option += "<option value='" + str(name.get("id")) + "'>" + name.get("name") + "</option>"
+    ele += ele_option
+    return mark_safe(ele)
+
+@register.simple_tag
+def build_next_pages(number,endnumber):
+    if number == endnumber:
+        return endnumber
+    return number + 1
+
+@register.simple_tag
+def build_frevious_pages(number):
+    if number > 1:
+        return number - 1
+    return 1
+
+@register.simple_tag
+def build_host_list(admin_class):
+    ele = ""
+    ele_option = ""
+    obj = admin_class.model.objects.values()
+    for host in obj:
+        ele_option += "<option value='"+str(host.get("id"))+"'>"+host.get("ipaddress")+"\t"+host.get("hostname")+"</option>"
+    ele += ele_option
+    return mark_safe(ele)
+
+@register.simple_tag
+def build_filter_ele(admin_class):
+    ele = ""
+    option = ""
+    obj = admin_class.model.objects.distinct().values('users')
+    for user in obj:
+        option += "<option value='"+user.get("users") +"'>" + user.get("users") + "</option>"
+    ele += option
+    return mark_safe(ele)

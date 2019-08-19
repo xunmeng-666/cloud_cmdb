@@ -7,12 +7,15 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib.auth import authenticate,login,logout
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
+from django.utils.http import urlquote
 from cmdbServer.admin_base import site
 from cmdbServer import forms
 from cmdbServer.core.fileFunc import fileFunc
-from cmdbServer.core.model_func import savelog,readlog
+from cmdbServer.core.model_func import savelog,readlog,hashpwd,dbFunc
 import json
+import os
 # Create your views here.
+
 
 def account_login(request):
     if request.method == "POST":
@@ -42,10 +45,12 @@ def index(request):
     return render(request,'index.html',locals())
 
 
-def adminfunc():
+def adminfunc(model_name):
     for app_name in site.registered_admins:
-        admin_class = site.registered_admins[app_name]
+        admin_class = site.registered_admins[app_name][model_name]
         return admin_class
+
+
 
 def get_filter_objs(request, admin_class):
     """返回filter的结果queryset"""
@@ -58,6 +63,7 @@ def get_filter_objs(request, admin_class):
             filter_condtions[k] = v
 
     queryset = admin_class.model.objects.filter(**filter_condtions)
+
     return queryset, filter_condtions
 
 def get_search_objs(request, querysets, admin_class):
@@ -70,17 +76,19 @@ def get_search_objs(request, querysets, admin_class):
     :param querysets:
     :param admin_class:
     :return:
+    contains： 区分大小写
+    icontains: 不区分大小写
     """
-    q_val = request.GET.get('_q')  # None
+    q_val = request.GET.get("_q")  # None
     if q_val:
         q_obj = Q()
-        q_obj.connector = "OR"
+        q_obj.connector = 'OR'
         for search_field in admin_class.search_fields:  # 2
-            q_obj.children.append(("%s__contains" % search_field, q_val))
+            q_obj.children.append(('%s__icontains' % search_field, q_val))
+
         search_results = querysets.filter(q_obj)  # 3
     else:
         search_results = querysets
-
     return search_results, q_val
 
 def get_orderby_objs(request, querysets):
@@ -103,7 +111,6 @@ def get_orderby_objs(request, querysets):
             new_order_key = orderby_key.strip('-')
         else:
             new_order_key = "-%s" % orderby_key
-
         return order_results, new_order_key, order_column, last_orderby_key
     else:
         return querysets, None, None, last_orderby_key
@@ -139,8 +146,12 @@ def table_obj_add(request,app_name,model_name):
     admin_class = site.registered_admins[app_name][model_name]
     form = forms.create_dynamic_modelform(admin_class.model)
     if request.method == 'POST':
-        savelog.log_info("%s" % request.user,"Create",request.POST)
+        if request.POST.get("password"):
+            request.POST._mutable = True
+            request.POST.update({'password': hashpwd.encrypt(request.POST.get("password"))})
+            savelog.log_info("%s" % request.user,"Create",request.POST.get("ipaddress"))
         form_obj = form(data=request.POST)
+
         if form_obj.is_valid():
             form_obj.save()
             return redirect("/asset/%s/"%model_name)
@@ -157,6 +168,8 @@ def table_obj_detail(request,app_name,model_name):
         obj_id = request.GET.get('device')
     else:
         obj_id = request.GET.get('id')
+
+
     return render(request,'gloab-form/detail_form.html',locals())
 
 @login_required
@@ -191,10 +204,12 @@ def table_obj_change(request,app_name,model_name,no_render=False):
         form_obj = form(instance=obj)
 
     elif request.method == 'POST':
+        request.POST._mutable = True
+        request.POST.update({'password':hashpwd.encrypt(request.POST.get("password"))})
         form_obj = form(instance=obj,data=request.POST)
         if form_obj.is_valid():
             form_obj.save()
-            savelog.log_info("%s" % request.user,"Updata",request.POST)
+            savelog.log_info("%s" % request.user,"Updata",request.POST.get("ipaddress"))
             return redirect("/asset/%s"%model_name)
     if no_render:
         return locals()
@@ -322,9 +337,13 @@ def device_group(request,no_render=False):
             return locals()
         return render(request, 'device/device_group.html', locals())
 
+
 @login_required
 def server(request,no_render=False):
-    savelog.log_info("%s" % request.user, "Info",'访问URL:%s' % request.get_raw_uri())
+    pal = request.GET.get('_q')
+    # savelog.log_info("%s" % request.user, "Info",'访问URL:http://%s%s' %(request.get_host(),os.path.join(request.path,"_q=%s"%pal)))
+    savelog.log_info("%s" % request.user, "Info",'访问URL:http://%s' %(request.get_raw_uri()))
+
     model_name = 'servers'
     for app_name in site.registered_admins:
         admin_class = site.registered_admins[app_name][model_name]
@@ -338,15 +357,17 @@ def server(request,no_render=False):
             form_obj = form()
 
             querysets, filter_conditions = get_filter_objs(request, admin_class)
-            querysets, q_val = get_search_objs(request, querysets.order_by('sn'), admin_class)
+            querysets, q_val = get_search_objs(request, querysets, admin_class)
             querysets, new_order_key, order_column, last_orderby_key = get_orderby_objs(request, querysets)
             paginator = Paginator(querysets, admin_class.list_per_page)  # Show 25 contacts per page
             page = request.GET.get('_page')
             try:
                 querysets = paginator.page(page)
             except PageNotAnInteger:
+                # If page is not an integer, deliver first page.
                 querysets = paginator.page(1)
             except EmptyPage:
+                # If page is out of range (e.g. 9999), deliver last page of results.
                 querysets = paginator.page(paginator.num_pages)
 
         if no_render:
@@ -537,22 +558,49 @@ def bonding(request,no_render=False):
         admin_class = site.registered_admins[app_name][model_name]
         form = forms.create_dynamic_modelform(admin_class.model)
         form_obj = form()
-        querysets, filter_conditions = get_filter_objs(request, admin_class)
-        querysets, q_val = get_search_objs(request, querysets, admin_class)
-        querysets, new_order_key, order_column, last_orderby_key = get_orderby_objs(request, querysets)
-        paginator = Paginator(querysets, admin_class.list_per_page)  # Show 25 contacts per page
-        page = request.GET.get('_page')
-        try:
-            querysets = paginator.page(page)
-        except PageNotAnInteger:
-            querysets = paginator.page(1)
-        except EmptyPage:
-            querysets = paginator.page(paginator.num_pages)
+
 
     if no_render:
         return locals()
     return render(request, 'gloab-form/list_form.html', locals())
 
+def queryset(request,admin_class):
+    querysets, filter_conditions = get_filter_objs(request, admin_class)
+    querysets, q_val = get_search_objs(request, querysets, admin_class)
+    querysets, new_order_key, order_column, last_orderby_key = get_orderby_objs(request, querysets)
+    paginator = Paginator(querysets, admin_class.list_per_page)  # Show 25 contacts per page
+    page = request.GET.get('_page')
+    try:
+        querysets = paginator.page(page)
+    except PageNotAnInteger:
+        querysets = paginator.page(1)
+    except EmptyPage:
+        querysets = paginator.page(paginator.num_pages)
+
+    return locals()
+
+@login_required
+@csrf_exempt
+def apps(request):
+    savelog.log_info("%s" % request.user, "Info", '访问URL:%s' % request.get_raw_uri())
+    model_name = 'apps'
+    app_name = 'cmdbServer'
+    admin_class = adminfunc(model_name)
+    form = forms.create_dynamic_modelform(admin_class.model)
+    form_obj = form()
+    # querysets = queryset(request,admin_class)
+    querysets, filter_conditions = get_filter_objs(request, admin_class)
+    querysets, q_val = get_search_objs(request, querysets, admin_class)
+    querysets, new_order_key, order_column, last_orderby_key = get_orderby_objs(request, querysets)
+    paginator = Paginator(querysets, admin_class.list_per_page)  # Show 25 contacts per page
+    page = request.GET.get('_page')
+    try:
+        querysets = paginator.page(page)
+    except PageNotAnInteger:
+        querysets = paginator.page(1)
+    except EmptyPage:
+        querysets = paginator.page(paginator.num_pages)
+    return render(request,'apps/apps_list.html',locals())
 
 @login_required
 @csrf_exempt
@@ -578,10 +626,24 @@ def uploadfile(request,app_name,model_name):
 def downloadfile(request,app_name,model_name):
     admin_class = site.registered_admins[app_name][model_name]
     downfile = fileFunc.export_file(model_name=model_name,admin_class=admin_class)
-    response = FileResponse(open(downfile,'rb'))
+    response = FileResponse(open(downfile, 'rb'))
     response['Content-Type'] = 'application/octet-stream'
-    response['Content=Disposition'] = 'application;filename="%s.xls"' %model_name
+    response['Content-Disposition'] = 'attachment;filename="{0}"'.format(urlquote(os.path.basename(downfile)))
+
     savelog.log_info("%s" % request.user, "Success",'下载配置文件模板:%s' %downfile)
+    return response
+
+def downPlaybook(request,model_name):
+    print('download Playbook')
+    taskid = request.GET.get('id')
+    admin_class = adminfunc(model_name)
+    downfile = dbFunc.getPath(uid=taskid,admin_class=admin_class)
+    print('filepath',downfile)
+    response = FileResponse(open(downfile, 'rb'))
+    response['Content-Type'] = 'application/octet-stream'
+    response['Content-Disposition'] = 'attachment;filename="{0}"'.format(urlquote(os.path.basename(downfile)))
+
+    savelog.log_info("%s" % request.user, "Success", '下载Playbook文件:%s' % downfile)
     return response
 
 @login_required
@@ -614,3 +676,86 @@ def logs(request,no_render=False):
             if no_render:
                 return locals()
             return render(request, 'systems/logs.html', locals())
+
+from cmdbServer.core.ansi import Ansible
+from cmdbServer.core.tasks import task
+
+def _querysets(admin_class,request):
+    querysets, filter_conditions = get_filter_objs(request, admin_class)
+    querysets, q_val = get_search_objs(request, querysets, admin_class)
+    querysets, new_order_key, order_column, last_orderby_key = get_orderby_objs(request, querysets)
+    paginator = Paginator(querysets, admin_class.list_per_page)  # Show 25 contacts per page
+    page = request.GET.get('_page')
+    try:
+        querysets = paginator.page(page)
+    except PageNotAnInteger:
+        querysets = paginator.page(1)
+    except EmptyPage:
+        querysets = paginator.page(paginator.num_pages)
+
+    return locals()
+
+@login_required
+@csrf_exempt
+def tasks(request):
+    model_name = 'servers'
+    modelName = 'tasks'
+    admin_class = adminfunc(model_name)
+    model_class = adminfunc(modelName)
+    if request.method == 'GET':
+        querysets = _querysets(admin_class=model_class,request=request)
+
+
+    elif request.method == 'POST':
+        file = request.FILES.get('file')
+        path = task.files(file)
+        return HttpResponse(json.dumps(path))
+    return render(request,'tasks/tasks.html',locals())
+
+@login_required
+@csrf_exempt
+def taskHistory(request):
+    model_name = 'tasks'
+    admin_class = adminfunc(model_name)
+    if request.method == 'GET':
+        querysets = _querysets(admin_class=admin_class, request=request)
+
+    elif request.method == 'POST':
+        user = request.POST.get('users')
+        startdate = request.POST.get('start')
+        enddate = request.POST.get('end')
+        data = dbFunc.filterd(admin_class,users=user,start_date=startdate,end_date=enddate)
+
+        return HttpResponse(json.dumps({"data":data}))
+
+    return render(request,'tasks/tasks_history.html',locals())
+
+@login_required
+def result(request):
+    tasksid = request.GET.get('taskid')
+    model_name = 'tasks'
+    admin_class = adminfunc(model_name)
+    obj = admin_class.model.objects.filter(id=tasksid).values("result")[0]
+    return HttpResponse(json.dumps(obj))
+
+
+
+from dwebsocket import require_websocket
+
+@login_required
+@require_websocket
+@csrf_exempt
+def tasks_websocket(request):
+    model_name = 'servers'
+    admin_class = adminfunc(model_name)
+    modelName = 'tasks'
+    model_class = adminfunc(modelName)
+    msg = request.websocket.wait().decode("utf-8")
+    data = json.loads(request.GET.get('data'))
+    savelog.log_info("%s" % request.user, "Info", 'RunTasks:%s' % (data))
+    data = task.encrypt(data)
+    run = task.taskFunc(admin_class, data,request,model_class)
+    request.websocket.send("success")
+    return HttpResponse(json.dumps({"status": run}))
+
+

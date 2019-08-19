@@ -1,24 +1,23 @@
-{% extends 'bash/bash-index.html' %}
+{% extends 'bash/bash.html' %}
 {% block head%}
 
 {% endblock %}
-{% block centent %}
+{% block content %}
 {% load deploy_tag %}
-<div id="content-header">
-    <ol class="breadcrumb" style="background-color: #ffffff">
-        <a href="/" class="tip-bottom" data-original-title="Go to Home"><i class="icon-home"></i>Home </a>>
-        <a href="/asset/{{ app_name }}/{{ model_name }}/" class="tip-bottom" data-original-title="">{% build_project_name admin_class %}</a>>
-        <a href="/asset/{{ app_name }}/{{ model_name }}/ADD{% build_project_name admin_class %}" title="添加{% build_project_name admin_class %}" class="tip-bottom" data-original-title="">添加{% build_project_name admin_class %}</a>
-    </ol>
-    <div class="col-lg-12 class-title">
-        <div class="ibox float-e-margins" id="all">
-            <div class="quick-actions">
-                <h4>添加{% build_project_verbose_name admin_class %}</h4>
-            </div>
-        </div>
-    </div>
+<div class="row" id="report1">
+    <div class="col-sm-12">
+        <ol class="breadcrumb" style="background-color: #ffffff;font-size: 10px;top: -20px">
+            <a href="/" class="tip-bottom" data-original-title="Go to Home"><i class="icon-home"></i>Home </a>>
+            <a href="/asset/{{ app_name }}/{{ model_name }}/" class="tip-bottom" data-original-title="">{% build_project_name admin_class %}</a>>
+            <a href="/asset/{{ app_name }}/{{ model_name }}/ADD{% build_project_name admin_class %}" title="添加{% build_project_name admin_class %}" class="tip-bottom" data-original-title="">添加{% build_project_name admin_class %}</a>
+        </ol>
+        <h4 style="text-align: center">{% build_project_verbose_name admin_class %}</h4>
 
-    <div class="row-fluid">
+    </div>
+</div>
+
+<div class="row" id="report1">
+    <div class="col-sm-12">
         <div class="span12">
             <div class="widget-box">
                 <div class="widget-title span10" style="border: 0px solid">
@@ -42,13 +41,19 @@
                                         {{ pass }}
                                         {% else %}
                                         <div class="form-group ">
-                                            <label class=" span1" id="{{ field.name }}" style="width: 9%;font-size: 12px">{{ field.label }}：</label>
+                                            <label id="{{ field.name }}" style="width: 9%;font-size: 12px">{{ field.label }}：</label>
                                             {% if field.name == 'phone' %}
                                                 <input type="text" name="phone" maxlength="11" oninput="value=value.replace(/[^\d]/g,'')">
                                             {% elif field.name == 'start_date' %}
                                                 <input type="date" name="start_date" class="form-control" id="id_start_date">
                                             {% elif field.name == 'end_date' %}
                                                 <input type="date" name="end_date"  class="form-control" id="id_end_date">
+                                            {% elif field.name == 'size' %}
+                                                <input type="number" name="size"  class="form-control" id="id_size">
+                                                <span style="color: red">(单位:U)</span>
+                                            {% elif field.name == 'password' %}
+                                                <input type="password" name="password"  class="form-control" id="id_password">
+                                                <span style="color: red" id="password_errors"></span>
                                             {% else %}
                                                 {{ field }}
                                             {% endif %}
@@ -61,7 +66,7 @@
                                 </div>
                                  <div class="form-group">
                                     <div class="span8">
-                                        <input type="submit" class="btn btn-info" value="保存">
+                                        <input type="submit" id="save" class="btn btn-info" value="保存">
                                     </div>
                                 </div>
                             </div>
@@ -99,9 +104,6 @@
         new_id = $(this).val();
         heigths = document.getElementById('height');
         id_heigths = document.getElementById('id_height');
-        console.log('newid',new_id)
-        console.log('heigths',heigths)
-        console.log('id_heigths',id_heigths)
         if (new_id > 1){
             heigths.style.display='none'
             id_heigths.style.display='none'
@@ -112,6 +114,16 @@
         }
     })
 
+    $("#id_size").change(function () {
+        var size_errors = document.getElementById('size_errors');
+        if (this.value > 48){
+            size_errors.innerText = '机柜容量不能大于48U';
+            $("#save").attr('disabled',true);
+        }else {
+            size_errors.style.innerText = ' ';
+            $("#save").attr('disabled',false);
+        }
+    })
 
 </script>
 {% endblock %}

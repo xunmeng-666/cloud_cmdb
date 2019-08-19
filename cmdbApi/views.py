@@ -196,3 +196,46 @@ class BondingDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = (
         IsAuthenticatedOrReadOnly,
     )
+
+class AppsList(generics.ListCreateAPIView):
+    queryset = Apps.objects.all()
+    serializer_class = AppsSerializer
+    permission_classes = (
+        IsAuthenticatedOrReadOnly,
+    )
+
+class AppsDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Apps.objects.all()
+    serializer_class = AppsSerializer
+    permission_classes = (
+        IsAuthenticatedOrReadOnly,
+    )
+
+class MonitorList(generics.ListCreateAPIView):
+    queryset = Monitors.objects.all()
+    serializer_class = MonitorSerializer
+    permission_classes = (
+        IsAuthenticatedOrReadOnly,
+    )
+
+class MonitorDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Monitors.objects.all()
+    serializer_class = MonitorSerializer
+    permission_classes = (
+        IsAuthenticatedOrReadOnly,
+    )
+
+
+
+# from rest_framework.decorators import api_view,renderer_classes
+# from rest_framework import renderers,response,schemas
+# generator = schemas.SchemaGenerator(title='Bookings API')
+#
+# class UserList(generics.ListCreateAPIView):
+#     """
+#     get: List all the users.
+#     post: Create a new user.
+#     """
+#     queryset = IDC.objects.all()
+#     serializer_class = IdcSerializer
+#     permission_classes = (IsAuthenticatedOrReadOnly,)

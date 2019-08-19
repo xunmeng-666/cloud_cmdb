@@ -1,48 +1,62 @@
 
-{% extends "bash/bash-index.html" %}
+{% extends "bash/bash.html" %}
 {% block head %}
 <link rel="stylesheet" href="/static/css/matrix-media.css" />
 {% endblock %}
-{% block centent %}
+{% block content %}
 {% load deploy_tag %}
 
 <!--breadcrumbs-->
-<div id="content-header">
-    <div id="breadcrumb"> <a href="/" title="Go to Home" class="tip-bottom"><i class="icon-home"></i> Home</a></div>
-</div>
-<div class="col-sm-12">
-    <div class="ibox float-e-margins" id="all">
-        <div class="quick-actions">
-            <h3>Dashboard For CMDB</h3>
-            <p></p>
-        </div>
-
-        <div class="row-fluid">
-            <div class="quick-actions_homepage">
-                <ul class="quick-actions">
-                    {% for name in objects %}
-                    <li class="bg_lb"> <a href="/asset/cabint/?_q={{ name.name }}">
-                        <i class="icon-home" ></i> {{ name.name }}
-                        {% build_idc_info admin_class name.id %}
-                        </a>
-                    </li>
-                    {% endfor %}
-
-                </ul>
-            </div>
-        </div>
+<div class="row" id="report1">
+    <div class="col-sm-12">
+        <ol class="breadcrumb" style="background-color: #ffffff;font-size: 10px;top: -20px;">
+            <a href="/" class="tip-bottom" data-original-title="Go to Home"><i class="icon-home"></i> Home </a>>
+        </ol>
+        <h4 style="text-align: center">Dashboard For CMDB</h4>
+        <br>
     </div>
 </div>
+<div class="row" id="report1">
+    <div class="col-sm-3">
+        <div class="card">
+            <a href="/asset/idc/" style="color: #0b0b0b;">
+            <div class="card-block">
+                <div class="text-left report1-cont">
+                    <h2 class="font-light m-b-0"><i class="ti-arrow-up text-success fa fa-home"></i>机房</h2>
+                </div>
+                <span class="text-success">机房数量: {% build_idc_count admin_class %}</span>
+            </div></a>
+        </div>
+    </div>
 
-<script>
+    <div class="col-sm-3">
+        <div class="card">
+            <a href="/asset/cabint/" style="color: #0b0b0b;">
+                <div class="card-block">
+                    <div class="text-left report1-cont">
+                        <h2 class="font-light m-b-0"><i class="ti-arrow-up text-success fa fa-align-justify"></i>机柜</h2>
+                    </div>
+                    <span class="text-success">机柜数量: {% build_cabint_info admin_class objects %}</span>
+                </div>
+            </a>
+        </div>
+    </div>
+    <div class="col-sm-3">
+        <div class="card">
+            <a href="/asset/servers/" style="color: #0b0b0b;">
+                <div class="card-block">
+                    <div class="text-left report1-cont">
+                        <h2 class="font-light m-b-0"><i class="ti-arrow-up text-success fa fa-server"></i>服务器</h2>
+                    </div>
+                    <span class="text-success">服务器数量: {% build_server_info admin_class objects %}</span>
+                </div>
+            </a>
+        </div>
+    </div>
 
-    function edit_cluster() {
-        console.log('编辑被点击',$(this));
+</div>
 
-        var cid = $("this td:eq(1)").text();
-        console.log('cid',cid);
-    }
 
-</script>
+
 
 {% endblock %}

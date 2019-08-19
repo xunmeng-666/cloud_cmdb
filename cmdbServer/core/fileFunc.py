@@ -11,8 +11,6 @@ class FileFunc(object):
     def _idc_id(self,admin_class,field):
         if type(field) is int:
             return field
-        print('idcA',admin_class,'field',field)
-        print('idc',admin_class.model.idc.get_queryset().filter(name=field).values('id')[0]['id'])
 
         return admin_class.model.idc.get_queryset().filter(name=field).values('id')[0]['id']
 
@@ -26,7 +24,6 @@ class FileFunc(object):
     def _company_id(self,admin_class,field):
         if type(field) is int:
             return field
-        print('field',field)
         return admin_class.model.company.get_queryset().filter(name=field).values('id')[0]['id']
 
     def _group_id(self,admin_class,field):
@@ -38,7 +35,6 @@ class FileFunc(object):
     def _cabint_id(self,admin_class,field):
         if type(field) is int:
             return field
-        print('c_id',admin_class.model.cabint.get_queryset().filter(number=field).values('id')[0]['id'])
         return admin_class.model.cabint.get_queryset().filter(number=field).values('id')[0]['id']
 
     def _warranty_id(self,admin_class,field):
@@ -50,18 +46,15 @@ class FileFunc(object):
         return admin_class.model.warranty.get_queryset().filter(end_date=fields).values('id')[0]['id']
 
     def _server_id(self,admin_class,field):
-        print('server_id',field)
         if type(field) is int:
             if int(admin_class.model.server.get_queryset().values('id')[0]['id'])==field:
                 return field
-        print('id!=field',admin_class.model.server.get_queryset().filter(hostname=field).values('id')[0]['id'])
         return admin_class.model.server.get_queryset().filter(hostname=field).values('id')[0]['id']
 
     def _protocol_id(self,admin_class,field):
         if not field:
             return None
         elif type(field) is int:
-            print('filed is int')
             if int(admin_class.model.protocol.get_queryset().values('id')[0]['id'])==field:
                 return field
 
@@ -69,10 +62,8 @@ class FileFunc(object):
 
     def _vlan_id(self,admin_class,field):
         if type(field) is int:
-            print('filed is int')
             if int(admin_class.model.vlan.get_queryset().values('id')[0]['id'])==field:
                 return field
-            print('id!=field')
         return admin_class.model.vlan.get_queryset().filter(number=field).values('id')[0]['id']
 
     def export_file(self,model_name,admin_class):
@@ -97,11 +88,11 @@ class FileFunc(object):
                     contents[content] = str(contents[content].strftime('%Y-%m-%d %H:%M:%S'))
                 w.write(excel_row,index,contents[content])
             excel_row += 1
-
-        if os.path.exists(export_file):
-            os.remove(export_file)
-        ws.save(export_file)
-        return export_file
+        _export_file = os.path.join(export_file, "模板文件-%s.xls") % (admin_class.model._meta.verbose_name)
+        if os.path.exists(_export_file):
+            os.remove(_export_file)
+        ws.save(_export_file)
+        return _export_file
 
     def import_idc_file(self,request,filename,model_name,admin_class):
         data = xlrd.open_workbook(filename)
@@ -134,7 +125,6 @@ class FileFunc(object):
         return import_status
 
     def import_cabint_file(self,request,filename,model_name,admin_class):
-        print('cabint',model_name)
         data = xlrd.open_workbook(filename)
         table = data.sheet_by_name(model_name)
         nrows = table.nrows
@@ -159,7 +149,6 @@ class FileFunc(object):
                 z += 1
         import_status = {'seccuss':y,'skip':x,'error':z}
         try:
-            print('work',WorkList)
             admin_class.model.objects.bulk_create(WorkList)
         except AttributeError as e:
             savelog.log_info("%s" % request.user, "Error", '导入配置文件失败:%s' %e)
@@ -251,7 +240,6 @@ class FileFunc(object):
                 z += 1
         import_status = {'seccuss':y,'skip':x,'error':z}
         try:
-            print('ram',WorkList)
             admin_class.model.objects.bulk_create(WorkList)
         except AttributeError as e:
             savelog.log_info("%s" % request.user, "Error", '导入配置文件失败:%s' % e)
@@ -282,7 +270,6 @@ class FileFunc(object):
                 z += 1
         import_status = {'seccuss':y,'skip':x,'error':z}
         try:
-            print('ram', WorkList)
             admin_class.model.objects.bulk_create(WorkList)
         except AttributeError as e:
             savelog.log_info("%s" % request.user, "Error", '导入配置文件失败:%s' % e)
@@ -307,7 +294,6 @@ class FileFunc(object):
                     x = x + 1
                 else:
                     y += 1
-                    print('server_id',server_id)
                     WorkList.append(
                         admin_class.model(id=row[0], sn=row[1],company_id=company_id,types=row[3],size=row[4],count=row[5],
                                           server_id=server_id,status=row[7],remarks=row[8]))
@@ -315,7 +301,6 @@ class FileFunc(object):
                 z += 1
         import_status = {'seccuss':y,'skip':x,'error':z}
         try:
-            print('work',WorkList)
             admin_class.model.objects.bulk_create(WorkList)
         except AttributeError as e:
             savelog.log_info("%s" % request.user, "Error", '导入配置文件失败:%s' % e)
@@ -420,7 +405,6 @@ class FileFunc(object):
                 z += 1
         import_status = {'seccuss':y,'skip':x,'error':z}
         try:
-            print('device',WorkList)
             admin_class.model.objects.bulk_create(WorkList)
             _position = {}
             admin_class.model.objects.bulk_create(WorkList)

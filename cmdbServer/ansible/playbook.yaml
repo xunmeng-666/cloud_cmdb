@@ -1,0 +1,11 @@
+
+- name: Run shell command
+  hosts: all
+  tasks:
+    - name: Use shell model
+      command: ll /etc/
+      register: result
+    
+    - name: Display Result
+      debug: msg="{{result}}"
+        

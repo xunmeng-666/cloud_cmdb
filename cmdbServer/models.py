@@ -132,6 +132,7 @@ class Device(models.Model):
 
     def create(self,*args,**kwargs):
         self.save(args,kwargs)
+
     def save(self, *args, **kwargs):
         objects = Cabint.objects.filter(id=self.cabint_id).values('useposition', 'size')[0]
         useposition = objects['useposition']
@@ -211,19 +212,23 @@ class Servers(models.Model):
     vlan = models.ForeignKey(Protocol,verbose_name='管理VLAN',blank=True,related_name='servers', on_delete=models.CASCADE)
     system = models.CharField(verbose_name='操作系统', max_length=32, blank=True, null=True)
     version = models.CharField(verbose_name='系统版本号', max_length=32, blank=True, null=True)
-    status = models.SmallIntegerField(verbose_name='主机状态',choices=device_status,default=0)
+    use_status = models.SmallIntegerField(verbose_name='使用状态',choices=device_status,default=0)
+    conn_status = models.CharField(verbose_name='连接状态',max_length=32,blank=True,null=True)
     group = models.ForeignKey(Group,verbose_name='服务器组',blank=True,null=True,related_name='servers', on_delete=models.CASCADE,)
     start_date = models.DateTimeField(verbose_name='上线时间', auto_now_add=True)
     end_date = models.DateTimeField(verbose_name='下线时间', blank=True, null=True)
     warranty = models.ForeignKey(Warranty, verbose_name='质保时间', related_name='servers', on_delete=models.CASCADE,
                                  blank=True, null=True)
-    userinfo = models.CharField(verbose_name='IPMI用户信息',max_length=32,blank=True,null=True)
+    user = models.CharField(verbose_name='SSH用户名',max_length=32,blank=True,null=True)
+    password = models.CharField(verbose_name='SSH密码',max_length=256,blank=True,null=True)
+    port = models.CharField(verbose_name='SSH端口号',max_length=8,blank=True,null=True)
     contacts = models.CharField(verbose_name='负责人', max_length=32, blank=True, null=True)
 
     class Meta:
         verbose_name = '服务器'
         verbose_name_plural = '服务器'
         unique_together = "cabint","position"
+
 
     def save(self, *args, **kwargs):
         objects = Cabint.objects.filter(id=self.cabint_id).values('useposition','size')[0]
@@ -264,6 +269,7 @@ class Servers(models.Model):
         return "%s,%s"%(self.company.name,self.company.model)
 
 
+
 class Nic(models.Model):
     choice_speed = (
         (0, '万兆'),
@@ -274,14 +280,10 @@ class Nic(models.Model):
         (0,'服务器'),
         (1,'网络设备'),
     )
-    ip_model = (
-        (0,'DHCP'),
-        (1,'STATIC'),
-    )
+
     sn = models.CharField(max_length=32, blank=True, null=True, unique=True)
     company = models.ForeignKey(Company,verbose_name='型号',related_name='nics',on_delete=models.CASCADE)
     ipaddress = models.GenericIPAddressField(verbose_name='IP地址', blank=True, null=True, unique=True)
-    model = models.SmallIntegerField(verbose_name='IP获取方式',choices=ip_model,default=0,blank=True,null=True)
     mac_address = models.CharField(verbose_name='MAC地址',max_length=32,blank=True,null=True)
     speed = models.SmallIntegerField(verbose_name='速率', choices=choice_speed, default=0)
     types = models.SmallIntegerField(choices=choice_type, default=0, verbose_name='类型')
@@ -355,7 +357,6 @@ class Disk(models.Model):
         return "%s,%s" % (self.company.name, self.company.model)
 
 class CPU(models.Model):
-    company = models.ForeignKey(Company, verbose_name='型号', related_name='cpus', on_delete=models.CASCADE)
     kernel = models.IntegerField(verbose_name='核数',)
     frequency = models.CharField(verbose_name='主频',max_length=12,blank=True,null=True)
     counts = models.IntegerField(verbose_name='数量',blank=True,null=True)
@@ -389,7 +390,6 @@ class Bonding(models.Model):
     ipaddress2 = models.GenericIPAddressField(verbose_name='IP地址2',blank=True,null=True)
     ipaddress3 = models.GenericIPAddressField(verbose_name='IP地址3',blank=True,null=True)
     ipaddress4 = models.GenericIPAddressField(verbose_name='IP地址4',blank=True,null=True)
-    remarks = models.CharField(verbose_name='备注', max_length=200, blank=True, null=True)
 
     class Meta:
         verbose_name = 'Bonding'
@@ -398,6 +398,41 @@ class Bonding(models.Model):
 
     def __str__(self):
         return "%s,%s" %(self.device,self.get_model_display())
+
+class Apps(models.Model):
+    host = models.ForeignKey(Servers,on_delete=models.CASCADE,related_name='apps',blank=True,null=True)
+    name = models.CharField(verbose_name='应用名称',max_length=64)
+    version = models.CharField(verbose_name='应用版本',max_length=64,blank=True,null=True)
+    ports = models.CharField(verbose_name='端口号',max_length=128,blank=True,null=True)
+    ssl = models.CharField(verbose_name='SSL',max_length=32,blank=True,null=True)
+    certif = models.FileField(verbose_name='证书',blank=True,null=True)
+    domain = models.CharField(verbose_name='域名',max_length=128,blank=True,null=True)
+    data = models.DateTimeField(verbose_name='日期',auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Apps'
+        verbose_name_plural = verbose_name
+
+    def __str__(self):
+        return "%s-%s" %(self.name,self.version)
+
+class Monitors(models.Model):
+    host = models.ForeignKey(Servers,on_delete=models.CASCADE,related_name='monitor',blank=True,null=True)
+    cpu_user = models.CharField(verbose_name='用户使用',max_length=64,blank=True,null=True)
+    cpu_system = models.CharField(verbose_name='系统使用',max_length=64,blank=True,null=True)
+    memory = models.CharField(verbose_name='内存使用率',max_length=64,blank=True,null=True)
+    disk = models.CharField(verbose_name='磁盘使用率',max_length=64,blank=True,null=True)
+    network = models.CharField(verbose_name='网络',max_length=64,blank=True,null=True)
+    data = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = '资源使用率'
+        verbose_name_plural = verbose_name
+
+    def __str__(self):
+        return self.host.ipaddress
+
+
 
 class Logs(models.Model):
     user = models.CharField(max_length=32)
@@ -408,4 +443,26 @@ class Logs(models.Model):
     class Meta:
         verbose_name = '日志'
         verbose_name_plural = verbose_name
+
+class Job(models.Model):
+    id = models.UUIDField(primary_key=True)
+    path = models.CharField(verbose_name='文件路径',max_length=128,blank=True,null=True)
+
+    class Meta:
+        verbose_name = 'Job'
+        verbose_name_plural = verbose_name
+
+    def __str__(self):
+        return self.id
+
+class Tasks(models.Model):
+    users = models.CharField(verbose_name='用户',max_length=64,blank=True,null=True)
+    result = JSONField(verbose_name='执行结果',blank=True,null=True)
+    script = models.ForeignKey(Job,on_delete=models.CASCADE,related_name='tasks',blank=True,null=True)
+    date = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = '任务'
+        verbose_name_plural = verbose_name
+
 

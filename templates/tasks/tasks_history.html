@@ -1,0 +1,294 @@
+{% extends 'bash/bash.html' %}
+{% block head%}
+
+{% endblock %}
+{% block content %}
+{% load deploy_tag %}
+
+    <div class="row" id="report1">
+        <div class="col-sm-12">
+            <ol class="breadcrumb titles" style="background-color: #ffffff;font-size: 12px;top: -20px">
+                <a href="/" class="tip-bottom" data-original-title="Go to Home"><i class="icon-home"></i> Home </a>>
+                <a href="/asset/tasks/" class="tip-bottom" data-original-title="">Tasks</a>>
+                <a href="/asset/tasks/" title="数据中心信息表" class="tip-bottom" data-original-title="">远程操作</a>
+            </ol>
+        </div>
+    </div>
+    <br>
+    <div class="row" style="margin-top: -30px">
+        <div class="col-md-12">
+            <div class="card form" id="form1">
+                <div class="card-header">
+                    <h4 style="text-align: center">历史操作</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card form" id="form1">
+                <div class="row" style="margin-top: 12px">
+                    <div class="col-md-3">
+                        <div class="row" >
+                            <div class="col-md-5">
+                                <label >选择用户:</label>
+                            </div>
+                            <div class="col-md-3 col-sm-7" style="margin-left: -40px">
+                                <select id="select-users">
+                                    {% build_filter_ele  admin_class %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-5" style="margin-left: -90px">
+                        <div class="row">
+                            <div class="text-center">
+                                <label>时间段过滤:</label>
+                            </div>
+                            <div class="col-md-3 col-sm-7" style="margin-top: -5px">
+                                <input type="text" class="form-control" name="_start" style="width: 150px;font-size: 10px;" placeholder="起始日期" id="startdate" >
+                            </div>
+                            <div class="col-md-3 col-sm-7" style="margin-left: 35px;margin-top: -5px">
+                                <input type="text" class="form-control" name="_end" style="width: 150px;font-size: 10px;" placeholder="结束日期" id="enddate" >
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-1">
+                        <button class="btn btn-success btn-sm" id="field-pass" style="margin-left: -80px;margin-top: -2px">过滤</button>
+                    </div>
+                </div>
+                <form>
+                    <div class="row" id="historys">
+                        <div class="row-fluid col-md-12">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        {% for couml in admin_class.list_display %}
+                                            {% if querysets.order_column == couml %}
+                                                {% if couml == 'users' %}
+                                                    <th class='text-center' style="width: 200px">
+                                                        <a href="?_o={{ querysets.new_order_key }}{{ querysets.filter_condtions_string }}">用户</a>
+                                                    </th>
+                                                {% else %}
+                                                    <th class='text-center' style="width: 200px">
+                                                        <a href="?_o={{ querysets.new_order_key }}{{ querysets.filter_condtions_string }}">日期</a>
+                                                    </th>
+                                                {% endif %}
+                                            {% else %}
+                                                {% if couml == 'users' %}
+                                                    <th class='text-center' style="width: 200px">
+                                                        <a href="?_o={{couml }}{{ querysets.filter_condtions_string }}">用户</a>
+                                                    </th>
+                                                {% else %}
+                                                    <th class='text-center' style="width: 200px">
+                                                        <a href="?_o={{ couml }}{{ querysets.filter_condtions_string }}">日期</a>
+                                                    </th>
+                                                {% endif %}
+                                            {% endif %}
+
+                                        {% endfor %}
+                                        <th class='text-center' style="width: 200px">下载</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbodys">
+                                    {% for row in querysets.querysets %}
+                                        <tr>
+                                            <td class='text-center' style="text-align: center">{{ row.users }}</td>
+                                            <td style="text-align: center" >{{ row.date|date:"Y-m-d H:i:s" }}</td>
+                                            <td style="text-align: center">
+                                                {% if row.script.path%}
+                                                    <a href="/asset/{{ modelName }}/download/?id={{ row.id }}" class="btn btn-sm btn-info">下载playbook</a>
+                                                    <a href="#" onclick="lookResutl(this)" name="{{ row.id }}" class="btn btn-info btn-sm" data-toggle="modal" data-target="#gridSystemModals">查看执行结果</a>
+                                                {% elif row.result %}
+                                                    <a href="#" onclick="lookResutl(this)" name="{{ row.id }}" class="btn btn-info btn-sm" data-toggle="modal" data-target="#gridSystemModals">查看执行结果</a>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <nav aria-label="Page navigation example">
+                    <ul class="pagination">
+                        <li ><a class="page-link" href="?_page=1{{ filter_condtions_string }}" aria-label="Previous">首页 </a></li>
+                        <li ><a class="page-link" href="?_page={% build_frevious_pages querysets.querysets.number %}" aria-label="Previous"><i class="fa fa-chevron-left"></i> </a></li>
+                        {% for p in querysets.paginator.page_range %}
+                            {% get_abs_value p  querysets.querysets.number as i %}
+                            {% if p < 3 %}
+                                {% if p == querysets.querysets.number %}
+                                    <li><a class="page-link" href="?_page={{ p }}{{ filter_condtions_string }}&_o={{ querysets.last_orderby_key }}">{{ p }} </a></li>
+                                {% else %}
+                                    <li><a class="page-link" href="?_page={{ p }}{{ filter_condtions_string }}&_o={{ querysets.last_orderby_key }}">{{ p }}</a></li>
+                                {% endif %}
+                            {% else %}
+                                <li><a class="page-link" href="?_page={{ p }}{{ filter_condtions_string }}&_o={{ querysets.last_orderby_key }}">{{ p }}</a></li>
+                            {% endif %}
+                        {% endfor %}
+                        <li class="">
+                            <a class="page-link" href="?_page={% build_next_pages querysets.querysets.number  querysets.paginator.num_pages%}"><i class="fa fa-chevron-right"></i></a>
+                        </li>
+                        <li class="">
+                            <a class="page-link" href="?_page={{ querysets.paginator.num_pages }}{{ querysets.filter_condtions_string }}&_o={{ querysets.last_orderby_key }}">尾页</a>
+                        </li>
+                        <li class="">
+                            <a class="page-link">总计 {{ querysets.querysets.paginator.num_pages }}页</a>
+                        </li>
+                        <li class="">
+                            <a class="page-link">总计 {{ querysets.querysets.paginator.count }}条</a>
+                        </li>
+                    </ul>
+                </nav>
+        </div>
+    </div>
+
+
+    <div class="modal fade bs-example-modal-lg" id="gridSystemModals" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabels">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+                <h4 class="modal-title" id="myLargeModalLabel">TasksResult</h4>
+            </div>
+            <div class="modal-body" id="display_logfile" style="background-color: #ffffff;display:block;height: 500px; overflow:scroll; border:1px solid;">
+                <div class="row col-md-12" >
+                    <dl class="dl-horizontal" id="dl-result">
+
+                    </dl>
+                </div>
+            </div>
+                <div class="modal-footer">
+                </div>
+          </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div>
+
+
+    <script src="/static/js/jquery.min.js"></script>
+<script>
+
+var spot = /./;
+    $(function () {
+        setTime();
+    });
+
+    function selectUser() {
+        var user = document.getElementById('select-users').value;
+        return user;
+    }
+
+    function selectDate() {
+        var start = document.getElementById('startdate').value;
+        var end = document.getElementById('enddate').value;
+        info = {"start":start,'end':end}
+        return info
+    }
+
+    $("#field-pass").on('click',function () {
+        var user = selectUser();
+        var dateed = selectDate();
+        dateed['users'] = user;
+        $.ajax({
+            url: '/asset/tasks/history/',
+            type: 'POST',
+            data: dateed,
+            success:function (data) {
+                var data = JSON.parse(data).data;
+                ele = "";
+                ele_tr = "<tr>"
+                for(var i = 0;i < data.length; i ++){
+                    ele_tr += "<td class='text-center' style='text-align: center'>"+data[i].users + "</td>";
+                    ele_tr += "<td style='text-align: center' >" + data[i].date + "</td>";
+                    if(data[i].script_id != null){
+                        ele_tr += "<td style='text-align: center'><a href='/asset/{{ modelName }}/download/?id="+data[0].id +"' class='btn btn-sm btn-info'>下载playbook</a>\n" +
+                            "<a href='#' onclick='lookResutl(this)' name='"+data[0].id+"' class='btn btn-info btn-sm' data-toggle='modal' data-target='#gridSystemModals'>查看执行结果</a></td>"
+                    }else {
+                        ele_tr += "<td style='text-align: center'><a href='#' onclick='lookResutl(this)' name='"+data[0].id+"' class='btn btn-info btn-sm' data-toggle='modal' data-target='#gridSystemModals'>查看执行结果</a></td>"
+                    }
+                    ele_tr += "</tr>"
+                }
+                ele += ele_tr;
+                $("#tbodys").html(ele)
+            }
+        })
+    })
+
+    function lookResutl(self) {
+
+        var taskid = self.name;
+        $.ajax({
+            url: '/asset/tasks/result/?taskid='+taskid,
+            type: 'get',
+            success:function (data) {
+                dataObj = JSON.parse(data).result.taskinfo;
+                console.log('data',dataObj)
+                ele = "";
+                dt = "";
+                dd = "";
+                dt += "<dt>hosts</dt>";
+                dd += "<dd>"+dataObj.hosts+"</dd>";
+
+                dt += "<dt>Command</dt>";
+
+                if(spot.test(dataObj.command)){
+                    file = dataObj.command[0].split("/")
+                    fname = file[file.length - 1]
+                    dd += "<dd>"+fname+"</dd>";
+                }
+                else {
+                    dd += "<dd>"+dataObj.command+"</dd>";
+                }
+                dt += "<dt>Result</dt>";
+                for(var i = 0;i < dataObj.resutl.length;i++){
+                    if(dataObj.resutl[i] != '[object Object]'){
+{#                        resutl is string#}
+
+                        dd += "<dd>"+ dataObj.resutl[i] +"</dd>";
+                    }
+                    else {
+                        console.log('is object')
+{#                        resutl is dict#}
+                        dd += "<dd>"
+                        $.each(dataObj.resutl[i],function (k,v) {
+                            dd += k+" ";
+                            $.each(v,function (key1,val1) {
+                                dd += key1 +"="+val1 +" "
+                            })
+                            dd+= "</dd>"
+                        })
+                    }
+                }
+                ele += dt;
+                ele += dd;
+                $("#dl-result").html(ele)
+            }
+        })
+    }
+
+function setTime() {
+
+    laydate.render({
+    elem: '#startdate',
+    type: 'datetime',
+    });
+
+    laydate.render({
+    elem: '#enddate',
+    type: 'datetime',
+    });
+
+}
+
+
+</script>
+{% endblock %}

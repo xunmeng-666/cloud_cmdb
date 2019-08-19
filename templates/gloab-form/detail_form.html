@@ -1,20 +1,27 @@
-{% extends 'bash/bash-index.html' %}
+{% extends 'bash/bash.html' %}
 {% block head%}
 
 {% endblock %}
-{% block centent %}
+{% block content %}
 {% load deploy_tag %}
-<div id="content-header">
-    <ol class="breadcrumb" style="background-color: #ffffff">
-        <a href="/" class="tip-bottom" data-original-title="Go to Home"><i class="icon-home"></i>Home </a>>
-        <a href="/asset/{{ model_name }}/" class="tip-bottom" data-original-title="">{% build_project_verbose_name admin_class %}</a>>
-        <a href="/asset/{{ model_name }}/" title="数据中心信息表" class="tip-bottom" data-original-title="">{% build_project_verbose_name admin_class %}详情表</a>
-    </ol>
+<div class="row" id="report1">
+        <div class="col-sm-12">
+            <ol class="breadcrumb" style="background-color: #ffffff;font-size: 10px;top: -20px">
+                <a href="/" class="tip-bottom" data-original-title="Go to Home"><i class="icon-home"></i> Home </a>>
+                <a href="/asset/{{ model_name }}/" class="tip-bottom" data-original-title="">{% build_project_verbose_name admin_class %}</a>>
+                <a href="/asset/{{ model_name }}/" title="数据中心信息表" class="tip-bottom" data-original-title="">{% build_project_verbose_name admin_class %}信息表</a>
+            </ol>
+            <h4 style="text-align: center">{% build_project_verbose_name admin_class %}</h4>
+
+        </div>
+    </div>
+    <div class="row" id="report1">
+
+
+    </div>
+<div class="row" id="report1">
     <div class="col-lg-12 class-title">
         <div class="ibox float-e-margins" id="all">
-            <div class="quick-actions">
-                <h2>{% build_project_verbose_name admin_class %}</h2>
-            </div>
 
             <div class="container-fluid">
                 <div class="row-fluid">
@@ -84,26 +91,6 @@
                             </tbody>
                         </table>
                     </form>
-                    <div class="pagination">
-                        <ul class="pagination">
-                            <li class=""><a href="?_page=1{{ filter_condtions_string }}">首页 </a></li>
-                            {% for p in paginator.page_range %}
-                                {% if i < 3 %}
-                                    {% if p == querysets.number %}
-                                        <li class="active"><a href="?_page={{ p }}{{ filter_condtions_string }}&_o={{ last_orderby_key }}">{{ p }} </a></li>
-                                    {% else %}
-                                        <li class=""><a href="?_page={{ p }}{{ filter_condtions_string }}&_o={{ last_orderby_key }}">{{ p }}</a></li>
-                                    {% endif %}
-                                {% endif %}
-                            {% endfor %}
-                            <li class="">
-                                <a  href="?_page={{ paginator.num_pages }}{{ filter_condtions_string }}&_o={{ last_orderby_key }}">尾页</a>
-                            </li>
-                            <li class="">
-                                <a>总计 {{ querysets.paginator.num_pages }}页</a>
-                            </li>
-                        </ul>
-                    </div>
                 </div>
             </div>
         </div>
@@ -119,7 +106,6 @@
 
 function all_del_file(self) {
     var check = document.getElementsByName("_selected_obj");
-    console.log('check',check);
     var len = check.length;
     var idAll = "";
     for (var i = 0; i<len;i++){
