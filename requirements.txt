@@ -9,5 +9,5 @@ urllib3
 pyvmomi
 pexpect
 pycryptodome
-ansible==2.7.10
+ansible==4.2.0
 dwebsocket
